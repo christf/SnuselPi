@@ -11,9 +11,11 @@ Die zentrale Komponente des Projekts nimmt Sensordaten auf und schickt diese an 
 * Netzteil 12V 40W/5V 20W
 * Wifi-Stick
 * Beschleunigungssensoren:  GY-61
+[http://www.sunfounder.com/index.php?c=case_in&a=detail_&id=103&name=Raspberry%20Pi#contitle]
 
 == Software ==
 * collectd
+* ntp
 * atd & cron
 * openhab/fhem (GUI für Einstellungen)
 
@@ -21,6 +23,12 @@ Die zentrale Komponente des Projekts nimmt Sensordaten auf und schickt diese an 
 == SnuselRTC ==
 === Funktion ===
 === Hardware ===
+* Pieper: http://www.reichelt.de/index.html?ARTICLE=145898
+* Batterielogik: DS 1307Z
+* http://www.exp-tech.de/sensoren/sonstige/adafruit-12-key-capacitive-touch-sensor-breakout-mpr121
+* http://www.exp-tech.de/sensoren/wasser-feuchtigkeit/seeed-studio-grove-temperature-humidity-sensor-pro
+* http://www.exp-tech.de/adafruit-bmp180-barometric-pressure-temperature-altitude-sensor-5v-ready
+
 === Software ===
 === Status ===
 nicht realisiert.
@@ -51,6 +59,7 @@ eines Handys brauchbar?
 nicht realisiert.
 
 == Licht Warmweiss ==
+Entscheidung: Treiberstein oder piblaster [http://ozzmaker.com/2013/09/23/software-pwm-on-a-raspberry-pi/]
 === Funktion ===
 * Nutzung als Raumbeleuchtung / Leselicht
 * Ansteuerung über Hardware-Schalter - irgendetwas kapazitatives.
@@ -62,8 +71,10 @@ nicht realisiert.
 nicht realisiert.
 
 == Licht RGB - Nachtbeleuchtung und Moodlight ==
+
 === Funktion ===
 === Hardware ===
+NCP5623
 === Software ===
 === Status ===
 nicht realisiert.
@@ -94,6 +105,8 @@ nicht realisiert.
 * Aktivierung nur bei Bewegungserkennung
 === Hardware ===
 * Projektor mit 4x 7-Segment-Anzeige
+* 2x TCA9535, geeigneter µC
+
 === Software ===
 === Status ===
 nicht realisiert.
