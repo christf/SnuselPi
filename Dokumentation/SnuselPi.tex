@@ -6,7 +6,7 @@
 \usepackage[german]{babel}		% deutsche Sprachunterstützung....
 \usepackage[utf8]{inputenc}		% Eingabecodierung: utf-8
 \usepackage{lmodern}			% moderne Schriften
-\usepackage[pdfcprot]{microtype}
+\usepackage{microtype}
 \usepackage{scrpage2}			% Kopf & Fußzeilen
 \usepackage{graphicx}			% Grafiken einbinden können
 \usepackage{varioref}			% flexible Verweise mit Seitenzahlen
@@ -92,13 +92,13 @@ Die zentrale Komponente des Projekts nimmt Sensordaten auf und legt diese per co
 \item Beschleunigungssensoren:  GY-61
 \item \url{http://www.sunfounder.com/index.php?c=case_in&a=detail_&id=103&name=Raspberry%20Pi#contitle}
 \item Netzteil: \url{http://www.reichelt.de/Schaltnetzteile-Case-geschlossen/SNT-MW60-DA/index.html?;ACTION=3;LA=444;GROUP=P861;GROUPID=4959;ARTICLE=66862;START=0;SORT=artnr;OFFSET=16;SID=2829e3Q6wQARwAAAWmPj8d7f1630d89fdfc3aba759ff1c878238e}
-
+\end{itemize}
 
 \subsection{Software}
 \begin{itemize}
 \item collectd (stellt die Messwerte dar, rrd liegen in einem tmpfs)
 \item ntp
-\item atd & cron
+\item atd \& cron
 \item fhem (GUI für Einstellungen)
 \item rsyncd (exportiert die rrd-Files vom collectd)
 \end{itemize}
@@ -213,13 +213,13 @@ nicht realisiert.
 \subsubsection{Hardware}
 \begin{itemize}
 \item Projektor mit 4x 7-Segment-Anzeige
-\item 2x TCA9535, geeigneter µC
+\item 2x TCA9535, geeigneter Microcontroller
 \end{itemize}
 \subsubsection{Software}
 \subsubsection{Status}
 nicht realisiert.
 
-\secion{Projektinfrastruktur}
+\section{Projektinfrastruktur}
 \begin{itemize}
 \item Github:  
 \item Images:
