@@ -1,0 +1,228 @@
+\documentclass[a4paper,twoside,titlepage,normalheadings,tocleft,bibtotoc]{scrartcl}
+\usepackage[paper=a4paper,left=30mm,right=30mm,top=30mm,bottom=40mm]{geometry}
+
+\usepackage[T1]{fontenc}		% schöne schriften
+\usepackage[german]{varioref}		% deutsche Sprachunterstützung für varioref
+\usepackage[german]{babel}		% deutsche Sprachunterstützung....
+\usepackage[utf8]{inputenc}		% Eingabecodierung: utf-8
+\usepackage{lmodern}			% moderne Schriften
+\usepackage[pdfcprot]{microtype}
+\usepackage{scrpage2}			% Kopf & Fußzeilen
+\usepackage{graphicx}			% Grafiken einbinden können
+\usepackage{varioref}			% flexible Verweise mit Seitenzahlen
+\usepackage[pdftex]{hyperref}		% das hyperref Paket nutzen um pdf optionen zu setzen
+\usepackage{cite}			% Zitate über mehrere Zeilen erlauben
+\usepackage{array}
+\renewcommand{\arraystretch}{1.1}	% Zeilenabstand setzen
+%\setlongtables
+\usepackage{lscape}		% rotierende tabellen
+\usepackage{longtable}
+\renewcommand{\baselinestretch}{1.2}	% Absatzabstand setzen
+%\addtolength{\topmargin}{-1.0cm} 	
+%\addtolength{\textheight}{1.5cm}
+\widowpenalty=10000 
+\clubpenalty=10000  
+\raggedbottom				% Kapitel nicht über ganze Seite verteilen, ggf unten Platz lassen.
+
+\setlength{\headheight}{30.0pt}
+
+
+% Sonstiges:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%          Kopf- und Fusszeile, Nummerierung
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\newcommand{\varTitle}{SnuselPi -- Ein modularer intelligenter Wecker}
+\newcommand{\varVeranstaltung}{\varTitle}
+\newcommand{\varshortTitle}{\varTitle} 
+\newcommand{\varAuthor}{Christof Schulze, Stefan Haun}
+
+\hypersetup{
+ pdftitle={\varVeranstaltung},
+ pdfsubject={\varshortTitle},
+ pdfauthor={\varAuthor},
+ pdfkeywords={}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%ha_tmp.tex%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Titelseite und Generierung der Inhaltsangabe
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setkomafont{pagehead}{\normalfont}
+
+\clearscrheadfoot
+\ihead{\varshortTitle} % Kopfzeile (innen)
+\ifoot{\pagemark} % Fußzeile (mitte)
+\setheadsepline{.5pt} % Kopzeile (Linie)
+\pagestyle{scrheadings}
+\hyphenation{Zu-sam-men-füh-rung}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%% eigene Kommandos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+
+
+%\input{titelseite}
+%\thispagestyle{empty}
+%\cleardoublepage
+\tableofcontents
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Die Hausarbeit beginnt hier
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Überblick}
+\subsection{Projektziel}
+SnuselPi ist ein modulares Wecksystem auf RaspberryPi-Basis. Das Gerät nimmt über Beschleunigungssensoren die Schlafphasen des Nutzers wahr und führt bei Bedarf (Bestimmung der idealen Weckuhrzeit auf Basis einer Prüfung des Kalenders und der Schlafphase) einen Weckvorgang durch. Dieser kann mittels Beleuchtung und akustisch eingeleitet werden. Die Weckfunktion ist kritisch, weshalb es eine Failsafe-Schaltung (SnuselRTC) per Buzzer den Weckvorgang übernimmt, sofern nicht vorab eine Abschaltung des Alarms erfolgt. SnuselRTC wird durch eine Batterie (Akku?) betrieben.
+Das Gerät ist so entworfen, dass es unter ein Bett gelegt werden kann und von dort aus die Steuerungsfunktionen wahrnimmt.
+\section{Module}
+\section{zentrale Komponente -- RaspberryPi}
+\subsection{Funktion}
+Die zentrale Komponente des Projekts nimmt Sensordaten auf und legt diese per collectd in rrd-Dateien im ram ab. Das Verzeichnis wird per rsync export, wodurch die Daten persisten gespeichert werden können. Außerdem ist unter \url{http://snuselpi/CGP/} ein Frontend zur graphischen Darstellung der Sensordaten eingerichtet. Der Watchdog startet das Gerät neu, sofern die load extrem ansteigt
+
+
+\subsection{Hardware}
+\begin{itemize}
+\item Raspberry Pi B+
+\item Wifi-Stick
+\item Beschleunigungssensoren:  GY-61
+\item \url{http://www.sunfounder.com/index.php?c=case_in&a=detail_&id=103&name=Raspberry%20Pi#contitle}
+\item Netzteil: \url{http://www.reichelt.de/Schaltnetzteile-Case-geschlossen/SNT-MW60-DA/index.html?;ACTION=3;LA=444;GROUP=P861;GROUPID=4959;ARTICLE=66862;START=0;SORT=artnr;OFFSET=16;SID=2829e3Q6wQARwAAAWmPj8d7f1630d89fdfc3aba759ff1c878238e}
+
+
+\subsection{Software}
+\begin{itemize}
+\item collectd (stellt die Messwerte dar, rrd liegen in einem tmpfs)
+\item ntp
+\item atd & cron
+\item fhem (GUI für Einstellungen)
+\item rsyncd (exportiert die rrd-Files vom collectd)
+\end{itemize}
+\subsection{Todo}
+\begin{itemize}
+\item mit dem watchdog collectd, lighttpd, fhem, mpd, Netzwerkkonnektivität überwachen
+\end{itemize}
+\section{Zusatzmodule}
+\subsection{SnuselRTC}
+\subsubsection{Funktion}
+\subsubsection{Hardware}
+\begin{itemize}
+\item Pieper: http://www.reichelt.de/index.html?ARTICLE=145898
+\item Batterielogik: DS 1307Z
+\item \url{http://www.exp-tech.de/sensoren/sonstige/adafruit-12-key-capacitive-touch-sensor-breakout-mpr121}
+\item \url{http://www.exp-tech.de/sensoren/wasser-feuchtigkeit/seeed-studio-grove-temperature-humidity-sensor-pro}
+\item \url{http://www.exp-tech.de/adafruit-bmp180-barometric-pressure-temperature-altitude-sensor-5v-ready}
+\end{itemize}
+
+\subsubsection{Software}
+\subsubsection{Status}
+nicht realisiert.
+
+\subsection{Audioausgabe}
+\subsubsection{Funktion}
+\begin{itemize}
+\item Audio-Weckfunktion
+\item Einschlafhilfe
+\item Steuerung über mpddroid oder anderem mpd client
+\end{itemize}
+
+\subsubsection{Hardware}
+\begin{itemize}
+\item Realisierung über Standard Audio-Schnittstelle des Raspi
+\item PC-Boxen inklusive Verstärker
+\end{itemize}
+
+\subsubsection{Software}
+\begin{itemize}
+\item mpd
+\item mpdpod (client)
+\end{itemize}
+
+\subsubsection{Status}
+nicht realisiert.
+
+\subsection{Handyladen}
+\subsubsection{Funktion}
+5V vom Netzteil werden über zwei USB-Kabel (eins je Bettseite) nach außen geführt. Die Spannung kann per passivem USB-Hub weiter verteilt werden.
+
+\subsubsection{Hardware}
+* brauchen wir da irgendetwas oder sind die 5V vom Netzteil direkt zum Laden
+eines Handys brauchbar?
+
+\subsection{Licht Warmweiss}
+Entscheidung: Treiberstein oder piblaster [http://ozzmaker.com/2013/09/23/software-pwm-on-a-raspberry-pi/]
+\subsubsection{Funktion}
+\begin{itemize}
+\item Nutzung als Raumbeleuchtung / Leselicht
+\item Ansteuerung über Hardware-Schalter - irgendetwas kapazitatives.
+\item Strom-Abschaltung von Verstärker
+\end{itemize}
+
+\subsubsection{Hardware}
+* 12V LED Warmweiss-Streifen von Reichelt \url{https://www.reichelt.de/LED-Lichtstreifen/JAMARA-700281/3/index.html?&ACTION=3&LA=5000&GROUP=L59&GROUPID=3959&ARTICLE=149559&START=0&SORT=artnr&OFFSET=16}
+
+\subsubsection{Software}
+\subsubsection{Status}
+nicht realisiert.
+
+\subsection{Licht RGB - Nachtbeleuchtung und Moodlight}
+
+\subsubsection{Funktion}
+\begin{itemize}
+\item automatische Ansteuerung bei Bewegungserkennung als Nachtlicht
+\item Ansteuerung über irgendein fhem-Modul und via andfhem und color-picker. Vielleicht lässt sich auch ein Farbverlauf bauen
+\end{itemize}
+
+\subsubsection{Hardware}
+NCP5623
+\subsubsection{Software}
+\subsubsection{Status}
+nicht realisiert.
+
+\subsection{Wetterstation}
+=== Funktion ===
+=== Hardware ===
+=== Software ===
+=== Status ===
+nicht realisiert.
+=== Temperatur ===
+nicht realisiert.
+=== CO2-Sensor ===
+nicht realisiert.
+=== Luftfeuchtigkeit ===
+nicht realisiert.
+
+\subsection{Fenstersteuerung}
+=== Funktion ===
+=== Hardware ===
+=== Software ===
+=== Status ===
+nicht realisiert.
+
+\subsection{Projektor}
+\subsubsection{Funktion}
+\begin{itemize}
+\item Anzeige von Uhrzeit, Außentemperatur
+\item Aktivierung nur bei Bewegungserkennung
+\end{itemize}
+
+\subsubsection{Hardware}
+\begin{itemize}
+\item Projektor mit 4x 7-Segment-Anzeige
+\item 2x TCA9535, geeigneter µC
+\end{itemize}
+\subsubsection{Software}
+\subsubsection{Status}
+nicht realisiert.
+
+\secion{Projektinfrastruktur}
+\begin{itemize}
+\item Github:  
+\item Images:
+\end{itemize}
+\end{document}
+
