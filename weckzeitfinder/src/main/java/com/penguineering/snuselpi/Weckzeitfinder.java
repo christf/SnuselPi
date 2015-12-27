@@ -3,7 +3,6 @@ package com.penguineering.snuselpi;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
@@ -50,12 +49,10 @@ public class Weckzeitfinder {
 			CalendarBuilder builder = new CalendarBuilder();
 			Calendar calendar = builder.build(fin);
 
-			for (Iterator i = calendar.getComponents().iterator(); i.hasNext();) {
-				Component component = (Component) i.next();
+			for (final Component component : calendar.getComponents()) {
 				System.out.println("Component [" + component.getName() + "]");
 
-				for (Iterator j = component.getProperties().iterator(); j.hasNext();) {
-					Property property = (Property) j.next();
+				for (final Property property : component.getProperties()) {
 					System.out.println("Property [" + property.getName() + ", " + property.getValue() + "]");
 				}
 
