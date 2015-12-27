@@ -3,17 +3,14 @@ package com.penguineering.snuselpi;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.VFS;
-import org.dmfs.rfc5545.DateTime;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
-import org.dmfs.rfc5545.recur.RecurrenceRule;
-import org.dmfs.rfc5545.recurrenceset.RecurrenceRuleAdapter;
-import org.dmfs.rfc5545.recurrenceset.RecurrenceSet;
-import org.dmfs.rfc5545.recurrenceset.RecurrenceSetIterator;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -22,12 +19,19 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Property;
 
 public class Weckzeitfinder {
+
+	private static boolean isinbetween(Component component, Date lowerdate, Date upperdate) {
+		return false;
+
+	}
+
 	public static void main(String[] args)
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException {
 
 		int limit = 10;
 		// IcsProcessor ip = new IcsProcessor();
-		
+		DateFormat lowerdatetime, upperdatetime;
+lowerdatetime = new DateFormat()
 		System.setProperty("ical4j.unfolding.relaxed", "true");
 
 		String filename = new String(
@@ -37,13 +41,10 @@ public class Weckzeitfinder {
 		// Locate the Jar file
 		FileSystemManager fsManager = VFS.getManager();
 		FileObject icsFile = fsManager.resolveFile("file:///home/christof/.calendars/christof/");
-
-		// List the children of the Jar file
 		FileObject[] children = icsFile.getChildren();
-		System.out.println("Children of " + icsFile.getName().getURI());
-		for (int f = 0; f < children.length; f++) {
 
-			System.out.println(children[f].getName().getPath() );
+		for (int f = 0; f < children.length; f++) {
+			System.out.println(children[f].getName().getPath());
 			filename = children[f].getName().getPath();
 
 			FileInputStream fin = new FileInputStream(filename);
@@ -58,6 +59,7 @@ public class Weckzeitfinder {
 					Property property = (Property) j.next();
 					System.out.println("Property [" + property.getName() + ", " + property.getValue() + "]");
 				}
+				isinbetween(component, lowerdatetime, upperdatetime);
 
 				System.out.println(component.getProperties("RRULE"));
 				System.out.println(component.getProperties("DTSTART"));
