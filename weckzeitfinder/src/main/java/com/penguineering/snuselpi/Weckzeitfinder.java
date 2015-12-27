@@ -10,17 +10,22 @@ import org.dmfs.rfc5545.recurrenceset.RecurrenceRuleAdapter;
 import org.dmfs.rfc5545.recurrenceset.RecurrenceSet;
 import org.dmfs.rfc5545.recurrenceset.RecurrenceSetIterator;
 
-public class App {
+public class Weckzeitfinder {
 	public static void main(String[] args) throws InvalidRecurrenceRuleException,IOException, FileNotFoundException {
 
 		int limit = 10;
 		IcsProcessor ip = new IcsProcessor();
 		
-			ip.init(args[0]);
-//			ip.init("/home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
+//			ip.init(args[0]);
+			ip.init("/home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
 		
 			System.out.println(ip.get("RRULE"));
-			
+	
+	// TODO: EXRULE
+	// TODO: RDATE
+	// TODO: EXDATE
+	
+			System.out.println(ip.get("DTSTART"));
 		DateTime start = new DateTime(2015, 0, 1);
 		RecurrenceRule rule = new RecurrenceRule("FREQ=YEARLY;BYMONTHDAY=23;BYMONTH=5");
 
