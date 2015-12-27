@@ -1,7 +1,6 @@
 package com.penguineering.snuselpi;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,12 +20,14 @@ public class IcsProcessor {
 		while ((line = br.readLine()) != null) {
 			if (line.matches("BEGIN:VEVENT")) {
 				schreibeabhier = true;
+				System.out.println("jo");
 			}
 
-			if (schreibeabhier)
+			if (schreibeabhier){
+				// System.out.println("mitnehmen: " +  line.substring(0, line.indexOf(":")) + line.substring(line.indexOf(":")));
 				lines.put(line.substring(0, line.indexOf(":")), line.substring(line.indexOf(":") + 1));
-			// System.out.println(line.substring(0, line.indexOf(":")) +
-			// line.substring(line.indexOf(":")));
+			}
+			 System.out.println(line.substring(0, line.indexOf(":")) + line.substring(line.indexOf(":")));
 		}
 		br.close();
 	}
