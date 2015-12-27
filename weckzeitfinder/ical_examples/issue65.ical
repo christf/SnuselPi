@@ -1,0 +1,62 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20150322T170300
+DESCRIPTION:1) IC 2239
+ Ab 17:03 Magdeburg Hbf\, Gleis 3
+ An 17:53 Halle(Saale)Hbf\, Gleis 8
+ 
+ 2) ICE 1715
+ Ab 18:00 Halle(Saale)Hbf\, Gleis 3
+ An 19:09 Erfurt Hbf
+ 
+ 3) ICE 1572
+ Ab 19:18 Erfurt Hbf\, Gleis 1
+ An 21:35 Frankfurt(Main)Süd\, Gleis 7
+ 
+ 4) S 4
+ -> Kronberg(Taunus)
+ Ab 21:48 Frankfurt(Main)Süd\, Gleis 4
+ An 21:53 Frankfurt(M)Konstablerwache\, Gleis 3
+ 
+ 5) Fußweg 4 Minuten
+ 
+ 6) U 6
+ -> Praunheim Heerstraße\, Frankfurt am Main
+ Ab 21:57 Konstablerwache\, Frankfurt am Main
+ An 22:10 Hausener Weg\, Frankfurt am Main
+SUMMARY:Fahrt von Magdeburg Hbf nach Hausener Weg\, Frankfurt am Main\; Umstiege: 4x\; Dauer: 05:07
+LOCATION:Magdeburg Hbf
+TRANSP:OPAQUE
+DTEND;TZID=Europe/Berlin:20150322T221000
+LAST-MODIFIED:20150322T160358Z
+DTSTAMP:20150322T160358Z
+CREATED:20150322T160358Z
+UID:08b5d9ea-7759-4804-916e-6b1ec6f7fbe5
+BEGIN:VALARM
+TRIGGER;VALUE=DURATION:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Default Event Notification
+X-WR-ALARMUID:92011d6e-04b6-420f-b8b9-df0f78ff47d9
+END:VALARM
+END:VEVENT
+END:VCALENDAR
