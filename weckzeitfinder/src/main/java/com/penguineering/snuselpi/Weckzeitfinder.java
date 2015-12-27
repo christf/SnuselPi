@@ -27,6 +27,8 @@ public class Weckzeitfinder {
 
 		int limit = 10;
 		// IcsProcessor ip = new IcsProcessor();
+		
+		System.setProperty("ical4j.unfolding.relaxed", "true");
 
 		String filename = new String(
 				"/home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
