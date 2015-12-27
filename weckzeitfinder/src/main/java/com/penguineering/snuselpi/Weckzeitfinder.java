@@ -51,12 +51,10 @@ lowerdatetime = new DateFormat()
 			CalendarBuilder builder = new CalendarBuilder();
 			Calendar calendar = builder.build(fin);
 
-			for (Iterator i = calendar.getComponents().iterator(); i.hasNext();) {
-				Component component = (Component) i.next();
+			for (final Component component : calendar.getComponents()) {
 				System.out.println("Component [" + component.getName() + "]");
 
-				for (Iterator j = component.getProperties().iterator(); j.hasNext();) {
-					Property property = (Property) j.next();
+				for (final Property property : component.getProperties()) {
 					System.out.println("Property [" + property.getName() + ", " + property.getValue() + "]");
 				}
 				isinbetween(component, lowerdatetime, upperdatetime);
