@@ -5,10 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.collection;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
@@ -16,11 +17,8 @@ import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
-import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
-import com.penguineering.snuselpi.model.CalendarEventBuilder;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
-import com.penguineering.snuselpi.model.StartTimeComparator;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -49,14 +47,15 @@ public class Weckzeitfinder {
 	 *            if not <code>null</code>, failed periods will be stored here
 	 * @return true if there have been failures to build a {@link CalendarEvent}
 	 */
-	public static boolean retrieveCalendarEvents(Component component, Period period, CalendarEventBuilderFactory evtBF,
-			List<CalendarEvent> events, List<Period> failed) {
+	public static boolean retrieveCalendarEvents(Component component, Period period,
+			com.penguineering.snuselpi.model.CalendarEventBuilderFactory evtBF, List<CalendarEvent> events,
+			List<Period> failed) {
 		boolean hasFailed = false;
 
 		PropertyList properties = component.getProperties();
 		final String uid = properties.getProperty("UID").getValue();
 
-		CalendarEventBuilder evtB = evtBF.newBuilder();
+		com.penguineering.snuselpi.model.CalendarEventBuilder evtB = evtBF.newBuilder();
 		evtB.setUUID(uid);
 
 		final PeriodList r = component.calculateRecurrenceSet(period);
@@ -66,7 +65,7 @@ public class Weckzeitfinder {
 			evtB.setSummary(properties.getProperty("SUMMARY").getValue());
 
 			try {
-				final CalendarEvent evt = evtB.create();
+				final com.penguineering.snuselpi.model.CalendarEvent evt = evtB.create();
 				events.add(evt);
 			} catch (final IllegalArgumentException iae) {
 				hasFailed = true;
@@ -147,6 +146,13 @@ public class Weckzeitfinder {
 			}
 		}
 
+		ArrayList<CalendarEvent> filteredList = new ArrayList<>(events);
+		CollectionUtils.filter(filteredList, new Predicate<Component>() {
+			@Override
+			public boolean evaluate(Component c) {
+				return c.getProperty("SUMMARY").getValue().contains("Wecker");
+			};
+		});
 		// sort the events by start date
 		Collections.sort(events, new StartTimeComparator());
 
