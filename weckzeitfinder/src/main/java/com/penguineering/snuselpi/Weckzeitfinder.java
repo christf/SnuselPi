@@ -54,9 +54,9 @@ public class Weckzeitfinder {
 		final Period period = new Period(start, end);
 
 		final FileSystemManager fsManager = VFS.getManager();
-		 FileObject icsFile = fsManager
-		//		.resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
-		 .resolveFile("file:///home/christof/.calendars/christof/");
+		FileObject icsFile = fsManager
+				// .resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
+				.resolveFile("file:///home/christof/.calendars/christof/");
 		// .resolveFile(
 		// "file:////home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
 
@@ -72,7 +72,7 @@ public class Weckzeitfinder {
 		final CalendarBuilder builder = new CalendarBuilder();
 
 		final CalendarEventBuilderFactory evtBF = BeanCalendarEventBuilderFactory.getInstance();
-		
+
 		// recurrences will be stored in this list
 		final List<CalendarEvent> events = new ArrayList<>();
 
@@ -97,20 +97,16 @@ public class Weckzeitfinder {
 
 						final PeriodList r = component.calculateRecurrenceSet(period);
 
-						final boolean componentRecursWithinPeriod = (r.size() > 0);
-						if (componentRecursWithinPeriod) {
+						for (final Period p : r) {
+							evtB.setStart(p.getStart()).setEnd(p.getEnd());
+							evtB.setSummary(properties.getProperty("SUMMARY").getValue());
 
-							for (final Period p : r) {
-								evtB.setStart(p.getStart()).setEnd(p.getEnd());
-								evtB.setSummary(properties.getProperty("SUMMARY").getValue());
-
-								try {
-									final CalendarEvent evt = evtB.create();
-									events.add(evt);
-								} catch (final IllegalArgumentException iae) {
-									log.error(String.format("Found invalid recurrence event with UID %s!", uid));
-									log.error(iae);
-								}
+							try {
+								final CalendarEvent evt = evtB.create();
+								events.add(evt);
+							} catch (final IllegalArgumentException iae) {
+								log.error(String.format("Found invalid recurrence event with UID %s!", uid));
+								log.error(iae);
 							}
 						}
 					}
@@ -120,10 +116,10 @@ public class Weckzeitfinder {
 				log.error(e.getMessage());
 			}
 		}
-		
+
 		// sort the events by start date
 		Collections.sort(events, new StartTimeComparator());
-		
+
 		// print list of events
 		System.out.println("List of Events in the given period:");
 		for (final CalendarEvent evt : events)
