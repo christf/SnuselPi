@@ -12,6 +12,11 @@ import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
+import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
+import com.penguineering.snuselpi.model.CalendarEvent;
+import com.penguineering.snuselpi.model.CalendarEventBuilder;
+import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
+
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
@@ -60,6 +65,8 @@ public class Weckzeitfinder {
 		System.setProperty("ical4j.unfolding.relaxed", "true");
 		final CalendarBuilder builder = new CalendarBuilder();
 
+		final CalendarEventBuilderFactory evtBF = BeanCalendarEventBuilderFactory.getInstance();
+
 		for (final FileObject fo : children) {
 			final String filename = fo.getName().getPath();
 			System.out.println(filename);
@@ -73,15 +80,28 @@ public class Weckzeitfinder {
 				// only work on VEVENTS, ignore VTODO
 				if (vevent.equals(component.getName())) {
 					System.out.println("Component [" + component.getName() + "]");
-					
+
+					PropertyList properties = component.getProperties();
+					final String uid = properties.getProperty("UID").getValue();
+
+					CalendarEventBuilder evtB = evtBF.newBuilder();
+					evtB.setUUID(uid);
+
 					final PeriodList r = component.calculateRecurrenceSet(period);
 
 					if (r.size() > 0) {
 						System.out.println("der folgende Termin liegt mit folgenden Ereignissen im Intervall:");
 						for (final Period p : r) {
-							PropertyList properties = component.getProperties();
-							System.out.println(p + " " + properties.getProperty("UID").getValue() + " "
-									+ properties.getProperty("SUMMARY").getValue());
+							evtB.setStart(p.getStart()).setEnd(p.getEnd());
+							evtB.setSummary(properties.getProperty("SUMMARY").getValue());
+
+							try {
+								final CalendarEvent evt = evtB.create();
+								System.out.println(evt);
+								// TODO do something with the event
+							} catch (final IllegalArgumentException iae) {
+								System.err.println(String.format("Found invalid recurrence event with UID %s!", uid));
+							}
 						}
 					}
 				}
