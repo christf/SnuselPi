@@ -62,14 +62,15 @@ public class Weckzeitfinder {
 			Calendar calendar = builder.build(fin);
 
 			String vevent = new String("VEVENT");
+
 			for (final Component component : calendar.getComponents()) {
-				// only work on VEVENTS, ignore VTODO
-				if (vevent.equals(component.getName())) {
-					System.out.println("Component [" + component.getName() + "]");
+
+				boolean componentIsVEVENT = vevent.equals(component.getName());
+				if (componentIsVEVENT) {
 					Period period = new Period(start, end);
 					PeriodList r = component.calculateRecurrenceSet(period);
-
-					if (r.size() > 0) {
+					boolean componentRecursWithinPeriod = (r.size() > 0);
+					if (componentRecursWithinPeriod) {
 						System.out.println("der folgende Termin liegt mit folgenden Ereignissen im Intervall:");
 						for (Iterator<Period> i = r.iterator(); i.hasNext();) {
 							PropertyList properties = component.getProperties();
