@@ -34,6 +34,51 @@ import net.fortuna.ical4j.model.PropertyList;
 public class Weckzeitfinder {
 	static Logger log = Logger.getLogger(Weckzeitfinder.class);
 
+	/**
+	 * Retrieve calendar events for a VEVENT in the given period.
+	 * 
+	 * @param component
+	 *            The component to retrieve events from
+	 * @param period
+	 *            The relevant time period
+	 * @param evtBF
+	 *            Builder Factory for {@link CalendarEvent}S
+	 * @param events
+	 *            new {@link CalendarEvent}S are added to this list
+	 * @param failed
+	 *            if not <code>null</code>, failed periods will be stored here
+	 * @return true if there have been failures to build a {@link CalendarEvent}
+	 */
+	public static boolean retrieveCalendarEvents(Component component, Period period, CalendarEventBuilderFactory evtBF,
+			List<CalendarEvent> events, List<Period> failed) {
+		boolean hasFailed = false;
+
+		PropertyList properties = component.getProperties();
+		final String uid = properties.getProperty("UID").getValue();
+
+		CalendarEventBuilder evtB = evtBF.newBuilder();
+		evtB.setUUID(uid);
+
+		final PeriodList r = component.calculateRecurrenceSet(period);
+
+		for (final Period p : r) {
+			evtB.setStart(p.getStart()).setEnd(p.getEnd());
+			evtB.setSummary(properties.getProperty("SUMMARY").getValue());
+
+			try {
+				final CalendarEvent evt = evtB.create();
+				events.add(evt);
+			} catch (final IllegalArgumentException iae) {
+				hasFailed = true;
+
+				if (failed != null)
+					failed.add(p);
+			}
+		}
+
+		return hasFailed;
+	}
+
 	public static void main(String[] args)
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
 
@@ -89,26 +134,11 @@ public class Weckzeitfinder {
 				for (final Component component : calendar.getComponents()) {
 					final boolean componentIsVEVENT = vevent.equals(component.getName());
 					if (componentIsVEVENT) {
-						PropertyList properties = component.getProperties();
-						final String uid = properties.getProperty("UID").getValue();
+						final boolean hasFailed = retrieveCalendarEvents(component, period, evtBF, events, null);
 
-						CalendarEventBuilder evtB = evtBF.newBuilder();
-						evtB.setUUID(uid);
-
-						final PeriodList r = component.calculateRecurrenceSet(period);
-
-						for (final Period p : r) {
-							evtB.setStart(p.getStart()).setEnd(p.getEnd());
-							evtB.setSummary(properties.getProperty("SUMMARY").getValue());
-
-							try {
-								final CalendarEvent evt = evtB.create();
-								events.add(evt);
-							} catch (final IllegalArgumentException iae) {
-								log.error(String.format("Found invalid recurrence event with UID %s!", uid));
-								log.error(iae);
-							}
-						}
+						if (hasFailed)
+							log.error(String.format("Found invalid recurrences in VEVENT with UID %s!",
+									component.getProperties().getProperty("UID").getValue()));
 					}
 				}
 			} catch (ParserException e) {
