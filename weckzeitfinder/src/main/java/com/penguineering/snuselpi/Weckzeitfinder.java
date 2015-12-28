@@ -5,12 +5,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.GregorianCalendar;
-import java.util.Iterator;
 
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
+import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
+
+import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
+import com.penguineering.snuselpi.model.CalendarEvent;
+import com.penguineering.snuselpi.model.CalendarEventBuilder;
+import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -37,9 +42,12 @@ public class Weckzeitfinder {
 		java.util.Date enddate = cal.getTime();
 		end = new DateTime(enddate);
 
-		String filename = new String();
-		// Locate the Jar file
-		FileSystemManager fsManager = VFS.getManager();
+		/*
+		 * We are looking for appointments with instances in this period.
+		 */
+		final Period period = new Period(start, end);
+
+		final FileSystemManager fsManager = VFS.getManager();
 		// FileObject icsFile =
 		// fsManager.resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
 		// fsManager.resolveFile("file:///home/christof/.calendars/christof/");
@@ -47,35 +55,56 @@ public class Weckzeitfinder {
 				"file:////home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
 
 		FileObject[] children = { icsFile };
-		if (icsFile.getType().toString().equals("folder")) {
+		if (icsFile.getType() == FileType.FOLDER) {
 			children = icsFile.getChildren();
 		}
-		for (int f = 0; f < children.length; f++) {
-			System.out.println(children[f].getName().getPath());
-			filename = children[f].getName().getPath();
 
-			FileInputStream fin = new FileInputStream(filename);
-			CalendarBuilder builder = new CalendarBuilder();
+		/*
+		 * Initialize the calendar parser
+		 */
+		System.setProperty("ical4j.unfolding.relaxed", "true");
+		final CalendarBuilder builder = new CalendarBuilder();
 
-			System.setProperty("ical4j.unfolding.relaxed", "true");
+		final CalendarEventBuilderFactory evtBF = BeanCalendarEventBuilderFactory.getInstance();
 
-			Calendar calendar = builder.build(fin);
+		for (final FileObject fo : children) {
+			final String filename = fo.getName().getPath();
+			System.out.println(filename);
 
-			String vevent = new String("VEVENT");
+			final FileInputStream fin = new FileInputStream(filename);
 
+			final Calendar calendar = builder.build(fin);
+
+
+			final String vevent = "VEVENT";
 			for (final Component component : calendar.getComponents()) {
-
-				boolean componentIsVEVENT = vevent.equals(component.getName());
+				final boolean componentIsVEVENT = vevent.equals(component.getName());
 				if (componentIsVEVENT) {
-					Period period = new Period(start, end);
-					PeriodList r = component.calculateRecurrenceSet(period);
-					boolean componentRecursWithinPeriod = (r.size() > 0);
+					System.out.println("Component [" + component.getName() + "]");
+
+					PropertyList properties = component.getProperties();
+					final String uid = properties.getProperty("UID").getValue();
+
+					CalendarEventBuilder evtB = evtBF.newBuilder();
+					evtB.setUUID(uid);
+
+					final PeriodList r = component.calculateRecurrenceSet(period);
+					
+					final boolean componentRecursWithinPeriod = (r.size() > 0);
 					if (componentRecursWithinPeriod) {
+
 						System.out.println("der folgende Termin liegt mit folgenden Ereignissen im Intervall:");
-						for (Iterator<Period> i = r.iterator(); i.hasNext();) {
-							PropertyList properties = component.getProperties();
-							System.out.println((Period) i.next() + " " + properties.getProperty("UID").getValue() + " "
-									+ properties.getProperty("SUMMARY").getValue());
+						for (final Period p : r) {
+							evtB.setStart(p.getStart()).setEnd(p.getEnd());
+							evtB.setSummary(properties.getProperty("SUMMARY").getValue());
+
+							try {
+								final CalendarEvent evt = evtB.create();
+								System.out.println(evt);
+								// TODO do something with the event
+							} catch (final IllegalArgumentException iae) {
+								System.err.println(String.format("Found invalid recurrence event with UID %s!", uid));
+							}
 						}
 					}
 				}
