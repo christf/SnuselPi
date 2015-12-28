@@ -10,6 +10,8 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
@@ -27,16 +29,17 @@ import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.PropertyList;
 
 public class Weckzeitfinder {
+	static Logger log = Logger.getLogger(Weckzeitfinder.class);
 
 	public static void main(String[] args)
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
-		// IcsProcessor ip = new IcsProcessor();
+
 		DateTime start, end;
 
 		// Termine zwischen dem aktuellen Zeitpunkt und dem Intervall in Tagen
-		// betrachten (also heute und morgen)
+		// betrachten
 		start = new DateTime();
-		int intervall = +10;
+		int intervall = +100;
 		java.util.Calendar cal = GregorianCalendar.getInstance();
 		cal.add(java.util.Calendar.DAY_OF_YEAR, intervall);
 		java.util.Date enddate = cal.getTime();
@@ -48,11 +51,11 @@ public class Weckzeitfinder {
 		final Period period = new Period(start, end);
 
 		final FileSystemManager fsManager = VFS.getManager();
-		// FileObject icsFile =
-		// fsManager.resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
-		// fsManager.resolveFile("file:///home/christof/.calendars/christof/");
-		FileObject icsFile = fsManager.resolveFile(
-				"file:////home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
+		 FileObject icsFile = fsManager
+		//		.resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
+		 .resolveFile("file:///home/christof/.calendars/christof/");
+		// .resolveFile(
+		// "file:////home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
 
 		FileObject[] children = { icsFile };
 		if (icsFile.getType() == FileType.FOLDER) {
@@ -69,45 +72,47 @@ public class Weckzeitfinder {
 
 		for (final FileObject fo : children) {
 			final String filename = fo.getName().getPath();
-			System.out.println(filename);
+			log.debug("parsing " + filename);
 
 			final FileInputStream fin = new FileInputStream(filename);
 
-			final Calendar calendar = builder.build(fin);
+			try {
+				final Calendar calendar = builder.build(fin);
 
+				final String vevent = "VEVENT";
+				for (final Component component : calendar.getComponents()) {
+					final boolean componentIsVEVENT = vevent.equals(component.getName());
+					if (componentIsVEVENT) {
+						PropertyList properties = component.getProperties();
+						final String uid = properties.getProperty("UID").getValue();
 
-			final String vevent = "VEVENT";
-			for (final Component component : calendar.getComponents()) {
-				final boolean componentIsVEVENT = vevent.equals(component.getName());
-				if (componentIsVEVENT) {
-					System.out.println("Component [" + component.getName() + "]");
+						CalendarEventBuilder evtB = evtBF.newBuilder();
+						evtB.setUUID(uid);
 
-					PropertyList properties = component.getProperties();
-					final String uid = properties.getProperty("UID").getValue();
+						final PeriodList r = component.calculateRecurrenceSet(period);
 
-					CalendarEventBuilder evtB = evtBF.newBuilder();
-					evtB.setUUID(uid);
+						final boolean componentRecursWithinPeriod = (r.size() > 0);
+						if (componentRecursWithinPeriod) {
 
-					final PeriodList r = component.calculateRecurrenceSet(period);
-					
-					final boolean componentRecursWithinPeriod = (r.size() > 0);
-					if (componentRecursWithinPeriod) {
+							for (final Period p : r) {
+								evtB.setStart(p.getStart()).setEnd(p.getEnd());
+								evtB.setSummary(properties.getProperty("SUMMARY").getValue());
 
-						System.out.println("der folgende Termin liegt mit folgenden Ereignissen im Intervall:");
-						for (final Period p : r) {
-							evtB.setStart(p.getStart()).setEnd(p.getEnd());
-							evtB.setSummary(properties.getProperty("SUMMARY").getValue());
-
-							try {
-								final CalendarEvent evt = evtB.create();
-								System.out.println(evt);
-								// TODO do something with the event
-							} catch (final IllegalArgumentException iae) {
-								System.err.println(String.format("Found invalid recurrence event with UID %s!", uid));
+								try {
+									final CalendarEvent evt = evtB.create();
+									System.out.println(evt);
+									// TODO do something with the event
+								} catch (final IllegalArgumentException iae) {
+									log.error(String.format("Found invalid recurrence event with UID %s!", uid));
+									log.error(iae);
+								}
 							}
 						}
 					}
 				}
+			} catch (ParserException e) {
+				log.error("the following file could not be parsed: " + filename);
+				log.error(e.getMessage());
 			}
 		}
 	}
