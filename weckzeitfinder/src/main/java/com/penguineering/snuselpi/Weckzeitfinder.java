@@ -4,13 +4,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
@@ -18,6 +20,7 @@ import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilder;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
+import com.penguineering.snuselpi.model.StartTimeComparator;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -69,6 +72,9 @@ public class Weckzeitfinder {
 		final CalendarBuilder builder = new CalendarBuilder();
 
 		final CalendarEventBuilderFactory evtBF = BeanCalendarEventBuilderFactory.getInstance();
+		
+		// recurrences will be stored in this list
+		final List<CalendarEvent> events = new ArrayList<>();
 
 		for (final FileObject fo : children) {
 			final String filename = fo.getName().getPath();
@@ -100,8 +106,7 @@ public class Weckzeitfinder {
 
 								try {
 									final CalendarEvent evt = evtB.create();
-									System.out.println(evt);
-									// TODO do something with the event
+									events.add(evt);
 								} catch (final IllegalArgumentException iae) {
 									log.error(String.format("Found invalid recurrence event with UID %s!", uid));
 									log.error(iae);
@@ -115,5 +120,13 @@ public class Weckzeitfinder {
 				log.error(e.getMessage());
 			}
 		}
+		
+		// sort the events by start date
+		Collections.sort(events, new StartTimeComparator());
+		
+		// print list of events
+		System.out.println("List of Events in the given period:");
+		for (final CalendarEvent evt : events)
+			System.out.println(evt);
 	}
 }
