@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
-
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
@@ -20,16 +19,11 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
+import com.penguineering.snuselpi.model.ArgParser;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.StartTimeComparator;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -89,86 +83,45 @@ public class Weckzeitfinder {
 		return hasFailed;
 	}
 
+	private static DateTime calculateEnd(int interval) {
+		java.util.Calendar cal = GregorianCalendar.getInstance();
+		cal.add(java.util.Calendar.DAY_OF_YEAR, interval);
+		java.util.Date enddate = cal.getTime();
+		return new DateTime(enddate);
+	}
+
 	public static void main(String[] args)
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
 
 		DateTime start, end;
-		String searchstring = "Wecker";
+
+		// initialize default values
+		String searchstring = new String("Wecker");
 		String inputfile = new String("file:///home/christof/.calendars/christof/");
-		
 		int interval = 10;
+
+		ArgParser a = new ArgParser();
+		try {
+			a.forArgs(args);
+		} catch (org.apache.commons.cli.ParseException e) {
+			log.error("could not parse arguments, exiting");
+			System.exit(1);
+		}
+		
+		if (a.getInterval() > 0)
+			interval = a.getInterval();
+		
+
+		if (!  a.getSearchstring().isEmpty() )
+			searchstring = a.getSearchstring();
+		if (! a.getInputfile().isEmpty())
+			inputfile = a.getInputfile();
+
+
 		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 
-		Options options = new Options();
-		options.addOption("l", true, "set debug level. Valid input: ALL,TRACE,DEBUG,INFO,WARN,ERROR,FATAL,OFF");
-		options.addOption("s", true, "set summary pattern to be matched against ics");
-		options.addOption("i", true, "set length of interval (in days) to be considered");
-		options.addOption("f", true, "set input file/directory");
-		options.addOption("h", false, "help");
-
-		CommandLineParser parser = new DefaultParser();
-		CommandLine cmd = null;
-		try {
-			cmd = parser.parse(options, args);
-		} catch (org.apache.commons.cli.ParseException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-
-		if (cmd.hasOption("h")) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("weckzeitfinder",
-					"Weckzeitfinder will display events that occur during the next <interval> days", options, "", true);
-			System.exit(0);
-		}
-		
-		if (cmd.hasOption("f")) {
-			inputfile = cmd.getOptionValue("f");
-		} else {
-			inputfile = "/dev/stdin";
-		}
-		
-		if (cmd.hasOption("s")) {
-			searchstring = cmd.getOptionValue("s");
-		} 
-		if (cmd.hasOption("i")) {
-			interval = Integer.parseInt(cmd.getOptionValue("i"));
-		}
-
-		if (cmd.hasOption("l")) {
-			HashMap<String, Level> logLevels = new HashMap<String, Level>();
-			logLevels.put("ALL", Level.ALL);
-			logLevels.put("TRACE", Level.TRACE);
-			logLevels.put("DEBUG", Level.DEBUG);
-			logLevels.put("INFO", Level.INFO);
-			logLevels.put("WARN", Level.WARN);
-			logLevels.put("ERROR", Level.ERROR);
-			logLevels.put("FATAL", Level.FATAL);
-			logLevels.put("OFF", Level.OFF);
-
-			if (logLevels.containsKey(cmd.getOptionValue("l")))
-				LogManager.getRootLogger().setLevel(logLevels.get(cmd.getOptionValue("l")));
-			else
-				log.error("unknown log4j logg level on comand line: " + cmd.getOptionValue("l"));
-
-		} else {
-			LogManager.getRootLogger().setLevel(Level.INFO);
-		}
-
-		String countryCode = cmd.getOptionValue("c");
-
-		if (countryCode == null) {
-			// print default date
-		} else {
-			// print date for country specified by countryCode
-		}
-
 		start = new DateTime();
-		
-		java.util.Calendar cal = GregorianCalendar.getInstance();
-		cal.add(java.util.Calendar.DAY_OF_YEAR, interval);
-		java.util.Date enddate = cal.getTime();
-		end = new DateTime(enddate);
+		end = new DateTime(calculateEnd(interval));
 
 		/*
 		 * We are looking for appointments with instances in this period.
