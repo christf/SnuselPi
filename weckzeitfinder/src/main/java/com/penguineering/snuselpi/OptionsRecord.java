@@ -65,7 +65,7 @@ final public class OptionsRecord {
 		int interval = 10;
 		// TODO find a platform-independent way
 		String inputfile = "/dev/stdin";
-		String searchstring = "Wecker";
+		String searchstring = null;
 
 		if (cmd.hasOption("f")) {
 			inputfile = cmd.getOptionValue("f");
