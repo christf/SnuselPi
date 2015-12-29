@@ -39,7 +39,6 @@ final public class ArgParser {
 			System.exit(0);
 		}
 
-
 		if (cmd.hasOption("l")) {
 			HashMap<String, Level> logLevels = new HashMap<String, Level>();
 			logLevels.put("ALL", Level.ALL);
@@ -64,12 +63,10 @@ final public class ArgParser {
 		if (cmd.hasOption("f")) {
 			setInputfile(cmd.getOptionValue("f"));
 		} else {
-			// TODO - this will only work on *nix, find a platform-independent
-			// way
+			// TODO find a platform-independent way
 			setInputfile("/dev/stdin");
 			log.info("reading ics-data from stdin");
 		}
-
 
 		if (cmd.hasOption("i")) {
 			setInterval(Integer.parseInt(cmd.getOptionValue("i")));

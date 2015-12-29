@@ -7,15 +7,12 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
+
 import org.apache.commons.collections4.Predicate;
 import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
