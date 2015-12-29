@@ -138,11 +138,10 @@ public class Weckzeitfinder {
 			try {
 				final Calendar calendar = builder.build(fin);
 
-				for (final Component component : calendar.getComponents()) {
-					final boolean componentIsVEVENT = component.getName().equals(Component.VEVENT);
-					// check if the component is a VEVENT
-					// and matches the inclusion predicate
-					if (componentIsVEVENT && inclPred.evaluate(component)) {
+				// iterate all VEVENT components
+				for (final Component component : calendar.getComponents(Component.VEVENT)) {
+					// check if the component matches the inclusion predicate
+					if (inclPred.evaluate(component)) {
 						final boolean hasFailed = retrieveCalendarEvents(component, period, evtBF, events, null);
 
 						if (hasFailed)
