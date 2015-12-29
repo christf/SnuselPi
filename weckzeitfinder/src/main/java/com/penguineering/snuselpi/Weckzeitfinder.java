@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.collections4.Predicate;
@@ -16,17 +15,16 @@ import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
-import com.penguineering.snuselpi.model.OptionsRecord;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
+import com.penguineering.snuselpi.model.OptionsRecord;
 import com.penguineering.snuselpi.model.StartTimeComparator;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
@@ -80,21 +78,12 @@ public class Weckzeitfinder {
 		return hasFailed;
 	}
 
-	private static DateTime calculateEnd(int interval) {
-		java.util.Calendar cal = GregorianCalendar.getInstance();
-		cal.add(java.util.Calendar.DAY_OF_YEAR, interval);
-		java.util.Date enddate = cal.getTime();
-		return new DateTime(enddate);
-	}
-
 	public static void main(String[] args)
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
 
-		DateTime start, end;
-
-		OptionsRecord a;
+		OptionsRecord options;
 		try {
-			a = OptionsRecord.forArgs(args);
+			options = OptionsRecord.forArgs(args);
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("could not parse arguments, exiting", e);
 			System.exit(1);
@@ -109,20 +98,14 @@ public class Weckzeitfinder {
 		}
 
 		// extract the relevant values
-		// TODO better use the record directly
-		final int interval = a.getInterval();
-		final String searchstring = a.getSearchstring();
-		final String inputfile = a.getInputfile();
+		final String searchstring = options.getSearchstring();
+		final String inputfile = options.getInputfile();
+		final Period period = options.getPeriod();
 
+		
 		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 
-		/*
-		 * We are looking for appointments with instances in this period.
-		 */
-		start = new DateTime();
-		end = new DateTime(calculateEnd(interval));
-		final Period period = new Period(start, end);
-
+		
 		FileObject icsFile = VFS.getManager().resolveFile(inputfile);
 
 		FileObject[] children = { icsFile };
@@ -161,8 +144,7 @@ public class Weckzeitfinder {
 					}
 				}
 			} catch (ParserException e) {
-				log.error("the following file could not be parsed: " + filename);
-				log.error(e.getMessage());
+				log.error(String.format("File %s could not be parsed: %s", filename, e.getMessage()), e);
 			}
 		}
 
