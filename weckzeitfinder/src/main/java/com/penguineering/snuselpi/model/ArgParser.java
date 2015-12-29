@@ -11,10 +11,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import com.penguineering.snuselpi.Weckzeitfinder;
 
 final public class ArgParser {
-	static Logger log = Logger.getLogger(Weckzeitfinder.class);
+	static Logger log = Logger.getLogger(ArgParser.class);
 	private int interval;
 	private String inputfile = new String();
 	private String searchstring = new String();
@@ -40,23 +39,6 @@ final public class ArgParser {
 			System.exit(0);
 		}
 
-		if (cmd.hasOption("f")) {
-			setInputfile(cmd.getOptionValue("f"));
-		} else {
-			// TODO - this will only work on *nix, find a platform-independent
-			// way
-			setInputfile("/dev/stdin");
-			log.info("reading ics-data from stdin");
-		}
-		log.debug("parsing searchstring");
-		if (cmd.hasOption("s")) {
-			log.debug("setting searchstring");
-			setSearchstring(cmd.getOptionValue("s"));
-		}
-
-		if (cmd.hasOption("i")) {
-			setInterval(Integer.parseInt(cmd.getOptionValue("i")));
-		}
 
 		if (cmd.hasOption("l")) {
 			HashMap<String, Level> logLevels = new HashMap<String, Level>();
@@ -76,6 +58,27 @@ final public class ArgParser {
 
 		} else {
 			LogManager.getRootLogger().setLevel(Level.INFO);
+		}
+		
+
+		if (cmd.hasOption("f")) {
+			setInputfile(cmd.getOptionValue("f"));
+		} else {
+			// TODO - this will only work on *nix, find a platform-independent
+			// way
+			setInputfile("/dev/stdin");
+			log.info("reading ics-data from stdin");
+		}
+
+
+		if (cmd.hasOption("i")) {
+			setInterval(Integer.parseInt(cmd.getOptionValue("i")));
+		}
+		
+		log.debug("parsing searchstring");
+		if (cmd.hasOption("s")) {
+			log.debug("setting searchstring");
+			setSearchstring(cmd.getOptionValue("s"));
 		}
 	}
 

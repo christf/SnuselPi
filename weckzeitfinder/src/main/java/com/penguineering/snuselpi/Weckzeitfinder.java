@@ -107,33 +107,25 @@ public class Weckzeitfinder {
 			log.error("could not parse arguments, exiting");
 			System.exit(1);
 		}
-		
+
 		if (a.getInterval() > 0)
 			interval = a.getInterval();
-		
 
-		if (!  a.getSearchstring().isEmpty() )
+		if (!a.getSearchstring().isEmpty())
 			searchstring = a.getSearchstring();
-		if (! a.getInputfile().isEmpty())
+		if (!a.getInputfile().isEmpty())
 			inputfile = a.getInputfile();
 
-
 		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
-
-		start = new DateTime();
-		end = new DateTime(calculateEnd(interval));
 
 		/*
 		 * We are looking for appointments with instances in this period.
 		 */
+		start = new DateTime();
+		end = new DateTime(calculateEnd(interval));
 		final Period period = new Period(start, end);
 
-		final FileSystemManager fsManager = VFS.getManager();
-		FileObject icsFile = fsManager
-				// .resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
-				.resolveFile(inputfile);
-		// .resolveFile(
-		// "file:////home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
+		FileObject icsFile = VFS.getManager().resolveFile(inputfile);
 
 		FileObject[] children = { icsFile };
 		if (icsFile.getType() == FileType.FOLDER) {
@@ -144,7 +136,6 @@ public class Weckzeitfinder {
 		 * Initialize the calendar parser
 		 */
 		// System.setProperty("ical4j.unfolding.relaxed", "true");
-		final CalendarBuilder builder = new CalendarBuilder();
 
 		final CalendarEventBuilderFactory evtBF = BeanCalendarEventBuilderFactory.getInstance();
 
@@ -158,7 +149,7 @@ public class Weckzeitfinder {
 			final FileInputStream fin = new FileInputStream(filename);
 
 			try {
-				final Calendar calendar = builder.build(fin);
+				final Calendar calendar = new CalendarBuilder().build(fin);
 
 				// iterate all VEVENT components
 				for (final Component component : calendar.getComponents(Component.VEVENT)) {
