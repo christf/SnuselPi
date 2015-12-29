@@ -33,7 +33,6 @@ import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 
-
 public class Weckzeitfinder {
 
 	static Logger log = Logger.getLogger(Weckzeitfinder.class);
@@ -88,7 +87,9 @@ public class Weckzeitfinder {
 
 		DateTime start, end;
 		final String searchstring = new String("Wecker");
-// TODO parameter von extern akzeptieren und die externen parameter auch sinnvoll parsen: loglevel, Suchpfad für ics-Files, Suchpattern für Weckeinträge, Suchintervalllänge 
+		// TODO parameter von extern akzeptieren und die externen parameter auch
+		// sinnvoll parsen: loglevel, Suchpfad für ics-Files, Suchpattern für
+		// Weckeinträge, Suchintervalllänge
 
 		// Termine zwischen dem aktuellen Zeitpunkt und dem Intervall in Tagen
 		// betrachten
@@ -136,7 +137,6 @@ public class Weckzeitfinder {
 			try {
 				final Calendar calendar = builder.build(fin);
 
-				
 				for (final Component component : calendar.getComponents()) {
 					final boolean componentIsVEVENT = component.getName().equals(Component.VEVENT);
 					if (componentIsVEVENT) {
@@ -156,13 +156,7 @@ public class Weckzeitfinder {
 		// sort the events by start date
 		Collections.sort(events, new StartTimeComparator());
 
-		/*
-		// print list of events
-		System.out.println("List of Events in the given period:");
-		for (final CalendarEvent evt : events)
-			System.out.println(evt);
-*/
-	
+		// TODO - first prune, then sort
 		final List<CalendarEvent> filteredList = events.stream().filter(s -> s.getSummary().contains(searchstring))
 				.collect(Collectors.toList());
 		for (CalendarEvent evt : filteredList)
