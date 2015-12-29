@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.collections4.Predicate;
@@ -15,7 +14,6 @@ import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
-import com.penguineering.snuselpi.model.ArgParser;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
@@ -25,7 +23,6 @@ import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
@@ -79,48 +76,34 @@ public class Weckzeitfinder {
 		return hasFailed;
 	}
 
-	private static DateTime calculateEnd(int interval) {
-		java.util.Calendar cal = GregorianCalendar.getInstance();
-		cal.add(java.util.Calendar.DAY_OF_YEAR, interval);
-		java.util.Date enddate = cal.getTime();
-		return new DateTime(enddate);
-	}
-
 	public static void main(String[] args)
 			throws IOException, FileNotFoundException {
 
-		DateTime start, end;
-
-		// initialize default values
-		String searchstring = new String("Wecker");
-		String inputfile = new String("file:///home/christof/.calendars/christof/");
-		int interval = 10;
-
-		ArgParser a = new ArgParser();
+		OptionsRecord options;
 		try {
-			a.forArgs(args);
+			options = OptionsRecord.forArgs(args);
 		} catch (org.apache.commons.cli.ParseException e) {
-			log.error("could not parse arguments, exiting");
+			log.error("could not parse arguments, exiting", e);
 			System.exit(1);
+
+			/*
+			 * This is dead code, but needed by the compiler to recognize that
+			 * this try-catch block will not leave an uninitialized options
+			 * record. The semantics of System.exit stopping the code are not
+			 * built in.
+			 */
+			return;
 		}
 
-		if (a.getInterval() > 0)
-			interval = a.getInterval();
+		// extract the relevant values
+		final String searchstring = options.getSearchstring();
+		final String inputfile = options.getInputfile();
+		final Period period = options.getPeriod();
 
-		if (!a.getSearchstring().isEmpty())
-			searchstring = a.getSearchstring();
-		if (!a.getInputfile().isEmpty())
-			inputfile = a.getInputfile();
-
+		
 		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 
-		/*
-		 * We are looking for appointments with instances in this period.
-		 */
-		start = new DateTime();
-		end = new DateTime(calculateEnd(interval));
-		final Period period = new Period(start, end);
-
+		
 		FileObject icsFile = VFS.getManager().resolveFile(inputfile);
 
 		FileObject[] children = { icsFile };
@@ -157,8 +140,7 @@ public class Weckzeitfinder {
 					}
 				}
 			} catch (ParserException e) {
-				log.error("the following file could not be parsed: " + filename);
-				log.error(e.getStackTrace());
+				log.error(String.format("File %s could not be parsed: %s", filename, e.getMessage()), e);
 			}
 		}
 
