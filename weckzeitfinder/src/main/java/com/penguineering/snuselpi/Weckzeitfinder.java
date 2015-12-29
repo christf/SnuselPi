@@ -16,7 +16,7 @@ import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
-import com.penguineering.snuselpi.model.ArgParser;
+import com.penguineering.snuselpi.model.OptionsRecord;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
@@ -92,26 +92,27 @@ public class Weckzeitfinder {
 
 		DateTime start, end;
 
-		// initialize default values
-		String searchstring = new String("Wecker");
-		String inputfile = new String("file:///home/christof/.calendars/christof/");
-		int interval = 10;
-
-		ArgParser a = new ArgParser();
+		OptionsRecord a;
 		try {
-			a.forArgs(args);
+			a = OptionsRecord.forArgs(args);
 		} catch (org.apache.commons.cli.ParseException e) {
-			log.error("could not parse arguments, exiting");
+			log.error("could not parse arguments, exiting", e);
 			System.exit(1);
+
+			/*
+			 * This is dead code, but needed by the compiler to recognize that
+			 * this try-catch block will not leave an uninitialized options
+			 * record. The semantics of System.exit stopping the code are not
+			 * built in.
+			 */
+			return;
 		}
 
-		if (a.getInterval() > 0)
-			interval = a.getInterval();
-
-		if (!a.getSearchstring().isEmpty())
-			searchstring = a.getSearchstring();
-		if (!a.getInputfile().isEmpty())
-			inputfile = a.getInputfile();
+		// extract the relevant values
+		// TODO better use the record directly
+		final int interval = a.getInterval();
+		final String searchstring = a.getSearchstring();
+		final String inputfile = a.getInputfile();
 
 		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 

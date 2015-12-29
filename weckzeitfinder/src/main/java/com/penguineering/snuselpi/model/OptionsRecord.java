@@ -12,13 +12,13 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-final public class ArgParser {
-	static Logger log = Logger.getLogger(ArgParser.class);
-	private int interval;
-	private String inputfile = new String();
-	private String searchstring = new String();
+import net.jcip.annotations.Immutable;
 
-	public void forArgs(String[] args) throws ParseException  {
+@Immutable
+final public class OptionsRecord {
+	static Logger log = Logger.getLogger(OptionsRecord.class);
+
+	public static OptionsRecord forArgs(String[] args) throws ParseException {
 
 		Options options = new Options();
 		options.addOption("l", true, "set debug level. Valid input: ALL,TRACE,DEBUG,INFO,WARN,ERROR,FATAL,OFF");
@@ -58,25 +58,44 @@ final public class ArgParser {
 		} else {
 			LogManager.getRootLogger().setLevel(Level.INFO);
 		}
-		
+
+		int interval = 10;
+		// TODO find a platform-independent way
+		String inputfile = "/dev/stdin";
+		String searchstring = "Wecker";
 
 		if (cmd.hasOption("f")) {
-			setInputfile(cmd.getOptionValue("f"));
+			inputfile = cmd.getOptionValue("f");
 		} else {
-			// TODO find a platform-independent way
-			setInputfile("/dev/stdin");
 			log.info("reading ics-data from stdin");
 		}
 
 		if (cmd.hasOption("i")) {
-			setInterval(Integer.parseInt(cmd.getOptionValue("i")));
+			try {
+				interval = Integer.parseInt(cmd.getOptionValue("i"));
+			} catch (NumberFormatException nfe) {
+				throw new ParseException("Illegal number value for interval option!");
+			}
 		}
-		
+
 		log.debug("parsing searchstring");
 		if (cmd.hasOption("s")) {
 			log.debug("setting searchstring");
-			setSearchstring(cmd.getOptionValue("s"));
+			searchstring = cmd.getOptionValue("s");
 		}
+		
+		return new OptionsRecord(interval, inputfile, searchstring);
+	}
+
+	private int interval;
+	private String inputfile;
+	private String searchstring;
+
+	public OptionsRecord(int interval, String inputfile, String searchstring) {
+		super();
+		this.interval = interval;
+		this.inputfile = inputfile;
+		this.searchstring = searchstring;
 	}
 
 	public int getInterval() {
@@ -89,17 +108,5 @@ final public class ArgParser {
 
 	public String getSearchstring() {
 		return searchstring;
-	}
-
-	private void setInterval(int interval) {
-		this.interval = interval;
-	}
-
-	private void setInputfile(String inputfile) {
-		this.inputfile = inputfile;
-	}
-
-	private void setSearchstring(String searchstring) {
-		this.searchstring = new String(searchstring);
 	}
 }
