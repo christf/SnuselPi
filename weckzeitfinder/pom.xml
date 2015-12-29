@@ -15,8 +15,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.0.2</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -74,11 +74,6 @@
 			<groupId>commons-vfs</groupId>
 			<artifactId>commons-vfs</artifactId>
 			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-collections4</artifactId>
-			<version>4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.jcip</groupId>

@@ -5,20 +5,23 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.collection;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
+import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
+import com.penguineering.snuselpi.model.StartTimeComparator;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -27,9 +30,12 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
+import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 
+
 public class Weckzeitfinder {
+
 	static Logger log = Logger.getLogger(Weckzeitfinder.class);
 
 	/**
@@ -47,13 +53,12 @@ public class Weckzeitfinder {
 	 *            if not <code>null</code>, failed periods will be stored here
 	 * @return true if there have been failures to build a {@link CalendarEvent}
 	 */
-	public static boolean retrieveCalendarEvents(Component component, Period period,
-			com.penguineering.snuselpi.model.CalendarEventBuilderFactory evtBF, List<CalendarEvent> events,
-			List<Period> failed) {
+	public static boolean retrieveCalendarEvents(Component component, Period period, CalendarEventBuilderFactory evtBF,
+			List<CalendarEvent> events, List<Period> failed) {
 		boolean hasFailed = false;
 
 		PropertyList properties = component.getProperties();
-		final String uid = properties.getProperty("UID").getValue();
+		final String uid = properties.getProperty(Property.UID).getValue();
 
 		com.penguineering.snuselpi.model.CalendarEventBuilder evtB = evtBF.newBuilder();
 		evtB.setUUID(uid);
@@ -62,7 +67,7 @@ public class Weckzeitfinder {
 
 		for (final Period p : r) {
 			evtB.setStart(p.getStart()).setEnd(p.getEnd());
-			evtB.setSummary(properties.getProperty("SUMMARY").getValue());
+			evtB.setSummary(properties.getProperty(Property.SUMMARY).getValue());
 
 			try {
 				final com.penguineering.snuselpi.model.CalendarEvent evt = evtB.create();
@@ -82,6 +87,8 @@ public class Weckzeitfinder {
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
 
 		DateTime start, end;
+		final String searchstring = new String("Wecker");
+// TODO parameter von extern akzeptieren und die externen parameter auch sinnvoll parsen: loglevel, Suchpfad für ics-Files, Suchpattern für Weckeinträge, Suchintervalllänge 
 
 		// Termine zwischen dem aktuellen Zeitpunkt und dem Intervall in Tagen
 		// betrachten
@@ -112,7 +119,7 @@ public class Weckzeitfinder {
 		/*
 		 * Initialize the calendar parser
 		 */
-		System.setProperty("ical4j.unfolding.relaxed", "true");
+		// System.setProperty("ical4j.unfolding.relaxed", "true");
 		final CalendarBuilder builder = new CalendarBuilder();
 
 		final CalendarEventBuilderFactory evtBF = BeanCalendarEventBuilderFactory.getInstance();
@@ -129,15 +136,15 @@ public class Weckzeitfinder {
 			try {
 				final Calendar calendar = builder.build(fin);
 
-				final String vevent = "VEVENT";
+				
 				for (final Component component : calendar.getComponents()) {
-					final boolean componentIsVEVENT = vevent.equals(component.getName());
+					final boolean componentIsVEVENT = component.getName().equals(Component.VEVENT);
 					if (componentIsVEVENT) {
 						final boolean hasFailed = retrieveCalendarEvents(component, period, evtBF, events, null);
 
 						if (hasFailed)
 							log.error(String.format("Found invalid recurrences in VEVENT with UID %s!",
-									component.getProperties().getProperty("UID").getValue()));
+									component.getProperties().getProperty(Property.UID).getValue()));
 					}
 				}
 			} catch (ParserException e) {
@@ -146,19 +153,19 @@ public class Weckzeitfinder {
 			}
 		}
 
-		ArrayList<CalendarEvent> filteredList = new ArrayList<>(events);
-		CollectionUtils.filter(filteredList, new Predicate<Component>() {
-			@Override
-			public boolean evaluate(Component c) {
-				return c.getProperty("SUMMARY").getValue().contains("Wecker");
-			};
-		});
 		// sort the events by start date
 		Collections.sort(events, new StartTimeComparator());
 
+		/*
 		// print list of events
 		System.out.println("List of Events in the given period:");
 		for (final CalendarEvent evt : events)
+			System.out.println(evt);
+*/
+	
+		final List<CalendarEvent> filteredList = events.stream().filter(s -> s.getSummary().contains(searchstring))
+				.collect(Collectors.toList());
+		for (CalendarEvent evt : filteredList)
 			System.out.println(evt);
 	}
 }
