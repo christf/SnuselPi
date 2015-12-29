@@ -1,4 +1,4 @@
-package com.penguineering.snuselpi.model;
+package com.penguineering.snuselpi;
 
 import java.util.GregorianCalendar;
 import java.util.HashMap;

@@ -18,7 +18,6 @@ import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
-import com.penguineering.snuselpi.model.OptionsRecord;
 import com.penguineering.snuselpi.model.StartTimeComparator;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
