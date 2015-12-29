@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.collections4.Predicate;
@@ -14,6 +15,8 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
@@ -21,6 +24,12 @@ import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.StartTimeComparator;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
@@ -33,7 +42,6 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 
 public class Weckzeitfinder {
-
 	static Logger log = Logger.getLogger(Weckzeitfinder.class);
 
 	/**
@@ -85,19 +93,80 @@ public class Weckzeitfinder {
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
 
 		DateTime start, end;
-		final String searchstring = "Wecker";
+		String searchstring = "Wecker";
+		String inputfile = new String("file:///home/christof/.calendars/christof/");
+		
+		int interval = 10;
 		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 
-		// TODO parameter von extern akzeptieren und die externen parameter auch
-		// sinnvoll parsen: loglevel, Suchpfad für ics-Files, Suchpattern für
-		// Weckeinträge, Suchintervalllänge
+		Options options = new Options();
+		options.addOption("l", true, "set debug level. Valid input: ALL,TRACE,DEBUG,INFO,WARN,ERROR,FATAL,OFF");
+		options.addOption("s", true, "set summary pattern to be matched against ics");
+		options.addOption("i", true, "set length of interval (in days) to be considered");
+		options.addOption("f", true, "set input file/directory");
+		options.addOption("h", false, "help");
 
-		// Termine zwischen dem aktuellen Zeitpunkt und dem Intervall in Tagen
-		// betrachten
+		CommandLineParser parser = new DefaultParser();
+		CommandLine cmd = null;
+		try {
+			cmd = parser.parse(options, args);
+		} catch (org.apache.commons.cli.ParseException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		if (cmd.hasOption("h")) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("weckzeitfinder",
+					"Weckzeitfinder will display events that occur during the next <interval> days", options, "", true);
+			System.exit(0);
+		}
+		
+		if (cmd.hasOption("f")) {
+			inputfile = cmd.getOptionValue("f");
+		} else {
+			inputfile = "/dev/stdin";
+		}
+		
+		if (cmd.hasOption("s")) {
+			searchstring = cmd.getOptionValue("s");
+		} 
+		if (cmd.hasOption("i")) {
+			interval = Integer.parseInt(cmd.getOptionValue("i"));
+		}
+
+		if (cmd.hasOption("l")) {
+			HashMap<String, Level> logLevels = new HashMap<String, Level>();
+			logLevels.put("ALL", Level.ALL);
+			logLevels.put("TRACE", Level.TRACE);
+			logLevels.put("DEBUG", Level.DEBUG);
+			logLevels.put("INFO", Level.INFO);
+			logLevels.put("WARN", Level.WARN);
+			logLevels.put("ERROR", Level.ERROR);
+			logLevels.put("FATAL", Level.FATAL);
+			logLevels.put("OFF", Level.OFF);
+
+			if (logLevels.containsKey(cmd.getOptionValue("l")))
+				LogManager.getRootLogger().setLevel(logLevels.get(cmd.getOptionValue("l")));
+			else
+				log.error("unknown log4j logg level on comand line: " + cmd.getOptionValue("l"));
+
+		} else {
+			LogManager.getRootLogger().setLevel(Level.INFO);
+		}
+
+		String countryCode = cmd.getOptionValue("c");
+
+		if (countryCode == null) {
+			// print default date
+		} else {
+			// print date for country specified by countryCode
+		}
+
 		start = new DateTime();
-		int intervall = +100;
+		
 		java.util.Calendar cal = GregorianCalendar.getInstance();
-		cal.add(java.util.Calendar.DAY_OF_YEAR, intervall);
+		cal.add(java.util.Calendar.DAY_OF_YEAR, interval);
 		java.util.Date enddate = cal.getTime();
 		end = new DateTime(enddate);
 
@@ -109,7 +178,7 @@ public class Weckzeitfinder {
 		final FileSystemManager fsManager = VFS.getManager();
 		FileObject icsFile = fsManager
 				// .resolveFile("file:///home/christof/Projekte/SnuselPi/SnuselPi-github/weckzeitfinder/ical_examples");
-				.resolveFile("file:///home/christof/.calendars/christof/");
+				.resolveFile(inputfile);
 		// .resolveFile(
 		// "file:////home/christof/.calendars/christof/bd2bba8e-ba62-450b-a811-46797762a2a8.1451149756383.ics");
 
