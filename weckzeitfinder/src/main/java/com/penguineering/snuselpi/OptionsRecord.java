@@ -63,7 +63,12 @@ final public class OptionsRecord {
 		}
 
 		int interval = 10;
-		// TODO find a platform-independent way
+		/*
+		 * Use this as a marker for the standard input. For a platform
+		 * independent solution, this must be translated to System.in later.
+		 * 
+		 * TODO do this despite of VFS
+		 */
 		String inputfile = "/dev/stdin";
 		String searchstring = null;
 
