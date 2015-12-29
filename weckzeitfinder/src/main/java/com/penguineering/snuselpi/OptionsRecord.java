@@ -64,6 +64,8 @@ final public class OptionsRecord {
 
 		int interval = 10;
 		// TODO find a platform-independent way
+		// 22:10 < _MrTux_> Klaus_Dieter: der Plattform-Unabhängige Weg für /dev/stdin in ist, nach diesem Pfad zu gucken und dann als Stream System.in zu verwenden - glaube ich
+
 		String inputfile = "/dev/stdin";
 		String searchstring = "Wecker";
 
