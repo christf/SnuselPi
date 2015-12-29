@@ -138,7 +138,7 @@ class BeanCalendarEvent implements CalendarEvent {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append(start.toString());
-		sb.append("–");
+		sb.append("-");
 		sb.append(end.toString());
 		sb.append(" [");
 		sb.append(sourceUUID);
