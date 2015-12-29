@@ -100,10 +100,13 @@ public class Weckzeitfinder {
 		final String inputfile = options.getInputfile();
 		final Period period = options.getPeriod();
 
-		
-		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
+		// set the predicate only if there is a search string
+		final Predicate<Component> inclPred;
+		if (searchstring == null)
+			inclPred = null;
+		else
+			inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 
-		
 		FileObject icsFile = VFS.getManager().resolveFile(inputfile);
 
 		FileObject[] children = { icsFile };
@@ -130,8 +133,9 @@ public class Weckzeitfinder {
 
 				// iterate all VEVENT components
 				for (final Component component : calendar.getComponents(Component.VEVENT)) {
-					// check if the component matches the inclusion predicate
-					if (inclPred.evaluate(component)) {
+					// check if the component matches,
+					// but only if there is an inclusion predicate
+					if ((inclPred == null) || inclPred.evaluate(component)) {
 						final boolean hasFailed = retrieveCalendarEvents(component, period, evtBF, events, null);
 
 						if (hasFailed)

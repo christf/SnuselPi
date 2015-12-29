@@ -64,10 +64,16 @@ final public class OptionsRecord {
 
 		int interval = 10;
 		// TODO find a platform-independent way
-		// 22:10 < _MrTux_> Klaus_Dieter: der Plattform-Unabhängige Weg für /dev/stdin in ist, nach diesem Pfad zu gucken und dann als Stream System.in zu verwenden - glaube ich
 
+		/*
+		 * Use this as a marker for the standard input. For a platform
+		 * independent solution, this must be translated to System.in later.
+		 * 22:10 < _MrTux_> Klaus_Dieter: der Plattform-Unabhängige Weg für /dev/stdin in ist, nach diesem Pfad zu gucken und dann als Stream System.in zu verwenden - glaube ich
+		 * 
+		 * TODO do this despite of VFS
+		 */
 		String inputfile = "/dev/stdin";
-		String searchstring = "Wecker";
+		String searchstring = null;
 
 		if (cmd.hasOption("f")) {
 			inputfile = cmd.getOptionValue("f");
