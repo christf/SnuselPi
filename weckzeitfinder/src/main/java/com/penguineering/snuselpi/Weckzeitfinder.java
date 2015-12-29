@@ -8,13 +8,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.Predicate;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemManager;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
@@ -86,7 +85,9 @@ public class Weckzeitfinder {
 			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
 
 		DateTime start, end;
-		final String searchstring = new String("Wecker");
+		final String searchstring = "Wecker";
+		final Predicate<Component> inclPred = SummaryInclusionPredicate.getInstance(searchstring);
+
 		// TODO parameter von extern akzeptieren und die externen parameter auch
 		// sinnvoll parsen: loglevel, Suchpfad für ics-Files, Suchpattern für
 		// Weckeinträge, Suchintervalllänge
@@ -139,7 +140,9 @@ public class Weckzeitfinder {
 
 				for (final Component component : calendar.getComponents()) {
 					final boolean componentIsVEVENT = component.getName().equals(Component.VEVENT);
-					if (componentIsVEVENT) {
+					// check if the component is a VEVENT
+					// and matches the inclusion predicate
+					if (componentIsVEVENT && inclPred.evaluate(component)) {
 						final boolean hasFailed = retrieveCalendarEvents(component, period, evtBF, events, null);
 
 						if (hasFailed)
@@ -156,10 +159,7 @@ public class Weckzeitfinder {
 		// sort the events by start date
 		Collections.sort(events, new StartTimeComparator());
 
-		// TODO - first prune, then sort
-		final List<CalendarEvent> filteredList = events.stream().filter(s -> s.getSummary().contains(searchstring))
-				.collect(Collectors.toList());
-		for (CalendarEvent evt : filteredList)
+		for (CalendarEvent evt : events)
 			System.out.println(evt);
 	}
 }
