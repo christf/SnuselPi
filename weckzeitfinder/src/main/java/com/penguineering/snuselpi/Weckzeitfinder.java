@@ -14,7 +14,6 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
-import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
 import com.penguineering.snuselpi.model.ArgParser;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
@@ -88,7 +87,7 @@ public class Weckzeitfinder {
 	}
 
 	public static void main(String[] args)
-			throws InvalidRecurrenceRuleException, IOException, FileNotFoundException, ParserException, ParseException {
+			throws IOException, FileNotFoundException {
 
 		DateTime start, end;
 
@@ -143,10 +142,8 @@ public class Weckzeitfinder {
 			final String filename = fo.getName().getPath();
 			log.debug("parsing " + filename);
 
-			final FileInputStream fin = new FileInputStream(filename);
-
 			try {
-				final Calendar calendar = new CalendarBuilder().build(fin);
+				final Calendar calendar = new CalendarBuilder().build(new FileInputStream(filename));
 
 				// iterate all VEVENT components
 				for (final Component component : calendar.getComponents(Component.VEVENT)) {
@@ -161,7 +158,7 @@ public class Weckzeitfinder {
 				}
 			} catch (ParserException e) {
 				log.error("the following file could not be parsed: " + filename);
-				log.error(e.getMessage());
+				log.error(e.getStackTrace());
 			}
 		}
 
