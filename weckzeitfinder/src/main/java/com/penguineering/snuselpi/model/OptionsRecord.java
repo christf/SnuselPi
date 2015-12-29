@@ -115,12 +115,12 @@ final public class OptionsRecord {
 	 * This might be implicit, but maybe some day we can set this. Storing this
 	 * time also ensures no problems when in between operation the date changes.
 	 */
-	private DateTime startTime;
-	private int interval;
-	private String inputfile;
-	private String searchstring;
+	private final DateTime startTime;
+	private final int interval;
+	private final String inputfile;
+	private final String searchstring;
 
-	public OptionsRecord(int interval, String inputfile, String searchstring) {
+	private OptionsRecord(int interval, String inputfile, String searchstring) {
 		super();
 		this.startTime = new DateTime();
 		this.interval = interval;
