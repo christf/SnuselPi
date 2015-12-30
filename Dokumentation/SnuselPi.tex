@@ -84,6 +84,19 @@ Das Gerät ist so entworfen, dass es unter ein Bett gelegt werden kann und von d
 \subsection{Funktion}
 Die zentrale Komponente des Projekts nimmt Sensordaten auf und legt diese per collectd in rrd-Dateien im ram ab. Das Verzeichnis wird per rsync export, wodurch die Daten persisten gespeichert werden können. Außerdem ist unter \url{http://snuselpi/CGP/} ein Frontend zur graphischen Darstellung der Sensordaten eingerichtet. Der Watchdog startet das Gerät neu, sofern die load extrem ansteigt
 
+\subsection{Bedienung}
+\subsubsection{Standardpasswort}
+\begin{tabular}{ll}
+Nutzer & pi \\
+Passwort & raspberry \\
+\end{tabular}
+
+\subsubsection{Programmierung der Weckzeit}
+Die Weckzeit wird über einen Kalender eingestellt, der mit einem Mobiltelefon oder am Rechner gepflegt werden kann. Der Kalender wird periodisch auf das Gerät synchronisiert. Während eines Termins mit dem Betreff "`Wecker"' ist die Einleitung des Weckvorgangs möglich. Am Ende des Termins erfolgt die Aktivierung von SnuselRTC, sofern der Nutzer nicht vorher durch Interaktion mit dem System den Erfolg des Weckvorgangs angezeigt hat. Neben der Uhrzeiteinstellung im Kalender berücksichtigt die Weckfunktion die über Bewegung gemessenen Schlafphasen um so ein möglichst sanftes Aufwachen zu ermöglichen. 
+
+\subsubsection{Statistiken}
+Die Bewegungs- und Sensordaten sind über ein Webinterface abrufbar: \url{http://snuselpi/CGP/}.
+Die Datenbasis ist per rsync erreichbar: \url{rsync://snuselpi::rrd}
 
 \subsection{Hardware}
 \begin{itemize}
@@ -103,7 +116,12 @@ Die zentrale Komponente des Projekts nimmt Sensordaten auf und legt diese per co
 \item mpd (such in /var/lib/mpd/music nach Musik)
 \item shairplay (DLNS-Sink im LAN, kann damit Audio von Handy und anderen DLNA-Quellen abspielen)
 \item rsyncd (exportiert die rrd-Files vom collectd)
+\item samba (exportiert den Ordner, in dem lokale Audiodateien abgelegt werden können)
 \end{itemize}
+
+\subsubsection{Weckzeitfinder}
+Der Weckzeitfinder ist ein java-Programm \url{https://github.com/christf/SnuselPi/tree/master}, welches alle Events eines Kalenders in einem bestimmten Zeitraum (ab Ausführungszeit beginnend) anzeigt. Die Komponente wird zur Ermittlung der Weckzeit genutzt. Frühestmögliche Weckzeit ist der Beginn eines Termins mit der Summary "Wecker". Am Ende des Termins erfolgt die Aktivierung von SnuselRTC.
+
 \subsection{Todo}
 \begin{itemize}
 \item mit dem watchdog collectd, lighttpd, fhem, mpd, Netzwerkkonnektivität überwachen
