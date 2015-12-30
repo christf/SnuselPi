@@ -1,19 +1,19 @@
 package com.penguineering.snuselpi;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.Predicate;
-import org.apache.commons.vfs.FileObject;
-import org.apache.commons.vfs.FileType;
-import org.apache.commons.vfs.VFS;
 import org.apache.log4j.Logger;
 
+import com.penguineering.snuselpi.fs.CalendarInput;
+import com.penguineering.snuselpi.fs.CalendarInputIterator;
+import com.penguineering.snuselpi.fs.CalendarIteratorException;
+import com.penguineering.snuselpi.fs.StdinCalendarInputIterator;
+import com.penguineering.snuselpi.fs.VfsCalendarInputIterator;
 import com.penguineering.snuselpi.model.BeanCalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
@@ -76,8 +76,30 @@ public class Weckzeitfinder {
 		return hasFailed;
 	}
 
-	public static void main(String[] args)
-			throws IOException, FileNotFoundException {
+	/**
+	 * Get the next calendar input item, log exceptions on the way.
+	 * 
+	 * @param iter
+	 *            The calendar input iterator.
+	 * @return An item or <code>null</code> if there are no more items.
+	 */
+	public static CalendarInput nextCalendarInput(CalendarInputIterator iter) {
+		CalendarInput ci = null;
+
+		boolean again = true;
+		while (again) {
+			try {
+				ci = iter.next();
+				again = false;
+			} catch (CalendarIteratorException cie) {
+				log.error(cie);
+			}
+		}
+
+		return ci;
+	}
+
+	public static void main(String[] args) throws IOException, FileNotFoundException {
 
 		OptionsRecord options;
 		try {
@@ -107,13 +129,6 @@ public class Weckzeitfinder {
 		else
 			inclPred = SummaryInclusionPredicate.getInstance(searchstring);
 
-		FileObject icsFile = VFS.getManager().resolveFile(inputfile);
-
-		FileObject[] children = { icsFile };
-		if (icsFile.getType() == FileType.FOLDER) {
-			children = icsFile.getChildren();
-		}
-
 		/*
 		 * Initialize the calendar parser
 		 */
@@ -124,12 +139,30 @@ public class Weckzeitfinder {
 		// recurrences will be stored in this list
 		final List<CalendarEvent> events = new ArrayList<>();
 
-		for (final FileObject fo : children) {
-			final String filename = fo.getName().getPath();
-			log.debug("parsing " + filename);
-
+		/*
+		 * Get the calendar input iterator.
+		 * 
+		 * If this fails we have to abandon the mission.
+		 */
+		final CalendarInputIterator calIter;
+		if ("/dev/stdin".equals(inputfile))
+			calIter = StdinCalendarInputIterator.newInstance();
+		else
 			try {
-				final Calendar calendar = new CalendarBuilder().build(new FileInputStream(filename));
+				calIter = VfsCalendarInputIterator.forPath(inputfile);
+			} catch (CalendarIteratorException e1) {
+				log.error(String.format("Faild to initialize provided path %s: %s", inputfile, e1.getMessage()), e1);
+				System.exit(-1);
+				return;
+			}
+
+		/*
+		 * Evaluate items from all input streams.
+		 */
+		CalendarInput ci;
+		while ((ci = nextCalendarInput(calIter)) != null) {
+			try {
+				final Calendar calendar = new CalendarBuilder().build(ci.getIs());
 
 				// iterate all VEVENT components
 				for (final Component component : calendar.getComponents(Component.VEVENT)) {
@@ -144,7 +177,7 @@ public class Weckzeitfinder {
 					}
 				}
 			} catch (ParserException e) {
-				log.error(String.format("File %s could not be parsed: %s", filename, e.getMessage()), e);
+				log.error(String.format("File %s could not be parsed: %s", ci.getName(), e.getMessage()), e);
 			}
 		}
 
