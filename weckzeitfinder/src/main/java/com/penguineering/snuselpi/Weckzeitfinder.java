@@ -19,9 +19,6 @@ import com.penguineering.snuselpi.model.CalendarEvent;
 import com.penguineering.snuselpi.model.CalendarEventBuilderFactory;
 import com.penguineering.snuselpi.model.StartTimeComparator;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
-import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
@@ -157,28 +154,41 @@ public class Weckzeitfinder {
 			}
 
 		/*
+		 * This is our business class: The code that decides what to do with
+		 * recurrence events and errors.
+		 */
+		CalendarRecurrenceSink sink = new CalendarRecurrenceSink() {
+			@Override
+			public void processCalendarEvent(CalendarInput ci, CalendarEvent evt) {
+				events.add(evt);
+			}
+
+			@Override
+			public void failedRecurrence(CalendarInput ci, Component component, Period period) {
+				log.error(String.format("Found invalid recurrences in VEVENT with UID %s!",
+						component.getProperties().getProperty(Property.UID).getValue()));
+			}
+
+			@Override
+			public void failedCalendarInput(CalendarInput ci, Exception e) {
+				log.error(String.format("File %s could not be parsed: %s", ci.getName(), e.getMessage()), e);
+			}
+		};
+
+		// set up the task factory
+		CalendarRecurrenceTaskFactory tf = CalendarRecurrenceTaskFactory.forValues(period, sink, evtBF);
+		tf.setInclusionPredicate(inclPred);
+
+		/*
 		 * Evaluate items from all input streams.
 		 */
 		CalendarInput ci;
 		while ((ci = nextCalendarInput(calIter)) != null) {
-			try {
-				final Calendar calendar = new CalendarBuilder().build(ci.getIs());
+			// create the recurrence expansion task
+			final CalendarRecurrenceTask task = tf.createRecurrenceTask(ci);
 
-				// iterate all VEVENT components
-				for (final Component component : calendar.getComponents(Component.VEVENT)) {
-					// check if the component matches,
-					// but only if there is an inclusion predicate
-					if ((inclPred == null) || inclPred.evaluate(component)) {
-						final boolean hasFailed = retrieveCalendarEvents(component, period, evtBF, events, null);
-
-						if (hasFailed)
-							log.error(String.format("Found invalid recurrences in VEVENT with UID %s!",
-									component.getProperties().getProperty(Property.UID).getValue()));
-					}
-				}
-			} catch (ParserException e) {
-				log.error(String.format("File %s could not be parsed: %s", ci.getName(), e.getMessage()), e);
-			}
+			// run the task
+			task.run();
 		}
 
 		// sort the events by start date
