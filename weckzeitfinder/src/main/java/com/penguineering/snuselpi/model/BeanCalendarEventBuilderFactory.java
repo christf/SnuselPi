@@ -1,5 +1,7 @@
 package com.penguineering.snuselpi.model;
 
+import java.text.SimpleDateFormat;
+
 import net.fortuna.ical4j.model.DateTime;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -137,9 +139,11 @@ class BeanCalendarEvent implements CalendarEvent {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append(start.toString());
-		sb.append("-");
-		sb.append(end.toString());
+
+		SimpleDateFormat df = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ssZ" );
+		sb.append(df.format(start));
+		sb.append("_");
+		sb.append(df.format(end));
 		sb.append(" [");
 		sb.append(sourceUUID);
 		sb.append("] ");
