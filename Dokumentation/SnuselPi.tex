@@ -13,6 +13,7 @@
 \usepackage[pdftex]{hyperref}		% das hyperref Paket nutzen um pdf optionen zu setzen
 \usepackage{cite}			% Zitate über mehrere Zeilen erlauben
 \usepackage{array}
+\usepackage{pdfsync}
 \renewcommand{\arraystretch}{1.1}	% Zeilenabstand setzen
 %\setlongtables
 \usepackage{lscape}		% rotierende tabellen
@@ -61,6 +62,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%% eigene Kommandos %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\synctex=1
 
 \begin{document}
 
@@ -72,18 +74,36 @@
 \tableofcontents
 \newpage
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Die Hausarbeit beginnt hier
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Überblick}
 \subsection{Projektziel}
-SnuselPi ist ein modulares Wecksystem auf RaspberryPi-Basis. Das Gerät nimmt über Beschleunigungssensoren die Schlafphasen des Nutzers wahr und führt bei Bedarf (Bestimmung der idealen Weckuhrzeit auf Basis einer Prüfung des Kalenders und der Schlafphase) einen Weckvorgang durch. Dieser kann mittels Beleuchtung und akustisch eingeleitet werden. Die Weckfunktion ist kritisch, weshalb es eine Failsafe-Schaltung (SnuselRTC) per Buzzer den Weckvorgang übernimmt, sofern nicht vorab eine Abschaltung des Alarms erfolgt. SnuselRTC wird durch eine Batterie (Akku?) betrieben.
-Das Gerät ist so entworfen, dass es unter ein Bett gelegt werden kann und von dort aus die Steuerungsfunktionen wahrnimmt.
+
+SnuselPi ist ein modulares Wecksystem auf RaspberryPi-Basis. Das Gerät nimmt
+über Beschleunigungssensoren die Schlafphasen des Nutzers wahr und führt bei
+Bedarf (Bestimmung der idealen Weckuhrzeit auf Basis einer Prüfung des
+Kalenders und der Schlafphase) einen Weckvorgang durch. Dieser kann mittels
+Beleuchtung und akustisch eingeleitet werden. Die Weckfunktion ist kritisch,
+weshalb es eine Failsafe-Schaltung (SnuselRTC) per Buzzer den Weckvorgang
+übernimmt, sofern nicht vorab eine Abschaltung des Alarms erfolgt. SnuselRTC
+kann mit Hilfe eines Kondensators ein ein Tag ohne Stromversorgung arbeiten.
+Das Gerät ist so entworfen, dass es unter ein Bett gelegt werden kann und von
+dort aus die Steuerungsfunktionen wahrnimmt.
+
 \section{Module}
 \section{zentrale Komponente -- RaspberryPi}
 \subsection{Funktion}
-Die zentrale Komponente des Projekts nimmt Sensordaten auf und legt diese per collectd in rrd-Dateien im ram ab. Das Verzeichnis wird per rsync export, wodurch die Daten persisten gespeichert werden können. Außerdem ist unter \url{http://snuselpi/CGP/} ein Frontend zur graphischen Darstellung der Sensordaten eingerichtet. Der Watchdog startet das Gerät neu, sofern die load extrem ansteigt
 
+Die zentrale Komponente des Projekts nimmt Sensordaten auf und legt diese per
+collectd in rrd-Dateien im ram ab. Das Verzeichnis wird per rsync export,
+wodurch die Daten persisten gespeichert werden können. Außerdem ist unter
+\url{http://snuselpi/CGP/} ein Frontend zur graphischen Darstellung der
+Sensordaten eingerichtet. Der Watchdog startet das Gerät neu, sofern die load
+extrem ansteigt
+
+ 
 \subsection{Bedienung}
 \subsubsection{Standardpasswort}
 \begin{tabular}{ll}
@@ -92,22 +112,43 @@ Passwort & raspberry \\
 \end{tabular}
 
 \subsubsection{Programmierung der Weckzeit}
-Die Weckzeit wird über einen Kalender eingestellt, der mit einem Mobiltelefon oder am Rechner gepflegt werden kann. Der Kalender wird periodisch auf das Gerät synchronisiert. Während eines Termins mit dem Betreff "`Wecker"' ist die Einleitung des Weckvorgangs möglich. Am Ende des Termins erfolgt die Aktivierung von SnuselRTC, sofern der Nutzer nicht vorher durch Interaktion mit dem System den Erfolg des Weckvorgangs angezeigt hat. Neben der Uhrzeiteinstellung im Kalender berücksichtigt die Weckfunktion die über Bewegung gemessenen Schlafphasen um so ein möglichst sanftes Aufwachen zu ermöglichen. 
+
+Die Weckzeit wird über einen Kalender eingestellt, der mit einem Mobiltelefon
+oder am Rechner gepflegt werden kann. Der Kalender wird periodisch auf das
+Gerät synchronisiert. Während eines Termins mit dem Betreff "`Wecker"' ist die
+Einleitung des Weckvorgangs möglich. Am Ende des Termins erfolgt die
+Aktivierung von SnuselRTC, sofern der Nutzer nicht vorher durch Interaktion mit
+dem System den Erfolg des Weckvorgangs angezeigt hat. Neben der
+Uhrzeiteinstellung im Kalender berücksichtigt die Weckfunktion die über
+Bewegung gemessenen Schlafphasen um so ein möglichst sanftes Aufwachen zu ermög
+lichen. 
 
 \subsubsection{Statistiken}
 Die Bewegungs- und Sensordaten sind über ein Webinterface abrufbar: \url{http://snuselpi/CGP/}.
 Die Datenbasis ist per rsync erreichbar: \url{rsync://snuselpi::rrd}
 
+
 \subsection{Hardware}
+
 \begin{itemize}
 \item Raspberry Pi B+
 \item Wifi-Stick
 \item Beschleunigungssensoren:  GY-61
+\item MCP3008
 \item \url{http://www.sunfounder.com/index.php?c=case_in&a=detail_&id=103&name=Raspberry%20Pi#contitle}
 \item Netzteil: \url{http://www.reichelt.de/Schaltnetzteile-Case-geschlossen/SNT-MW60-DA/index.html?;ACTION=3;LA=444;GROUP=P861;GROUPID=4959;ARTICLE=66862;START=0;SORT=artnr;OFFSET=16;SID=2829e3Q6wQARwAAAWmPj8d7f1630d89fdfc3aba759ff1c878238e}
 \end{itemize}
 
 \subsection{Software}
+\subsubsection{Weckzeitfinder}
+
+Der Weckzeitfinder ist ein java-Programm
+\url{https://github.com/christf/SnuselPi/tree/master}, welches alle Events
+eines Kalenders in einem bestimmten Zeitraum (ab Ausführungszeit beginnend)
+anzeigt. Die Komponente wird zur Ermittlung der Weckzeit genutzt.
+Frühestmögliche Weckzeit ist der Beginn eines Termins mit der Summary "Wecker".
+Am Ende des Termins erfolgt die Aktivierung von SnuselRTC.
+
 \begin{itemize}
 \item collectd (stellt die Messwerte dar, rrd liegen in einem tmpfs)
 \item ntp
@@ -116,11 +157,34 @@ Die Datenbasis ist per rsync erreichbar: \url{rsync://snuselpi::rrd}
 \item mpd (such in /var/lib/mpd/music nach Musik)
 \item shairplay (DLNS-Sink im LAN, kann damit Audio von Handy und anderen DLNA-Quellen abspielen)
 \item rsyncd (exportiert die rrd-Files vom collectd)
-\item samba (exportiert den Ordner, in dem lokale Audiodateien abgelegt werden können)
+\item smbd (Abspeichern von Audio-Files im mpd-Ordner)
 \end{itemize}
 
-\subsubsection{Weckzeitfinder}
-Der Weckzeitfinder ist ein java-Programm \url{https://github.com/christf/SnuselPi/tree/master}, welches alle Events eines Kalenders in einem bestimmten Zeitraum (ab Ausführungszeit beginnend) anzeigt. Die Komponente wird zur Ermittlung der Weckzeit genutzt. Frühestmögliche Weckzeit ist der Beginn eines Termins mit der Summary "Wecker". Am Ende des Termins erfolgt die Aktivierung von SnuselRTC.
+\subsection{Pins - Raspi - MCP3008}
+\begin{itemize}
+\item[1] VDD (3.3V)
+\item[2] VREF (5V)
+\item[21] (GPIO 9) DOUT
+\item[19] (GPIO 10) DIN
+\item[23] (GPIO 11) SCLC MCP3008
+\item[24] (GPIO 8) Slave Select -- MCP3008
+\item[26] (GPIO 8) Slave Select -- ?
+\item[25] AGND, DGND
+\end{itemize}
+
+\subsection{Pins -- Raspi - SnuselRTC}
+\begin{itemize}
+\item[3] SDA
+\item[5] SDI
+\item[7] I3C-Interrupt-Leitung
+\end{itemize}
+
+\subsection{Pins -- Raspi Debug}
+\begin{itemize}
+\item[6] GND
+\item[8] TX
+\item[10] RX
+\end{itemize}
 
 \subsection{Todo}
 \begin{itemize}
@@ -218,7 +282,6 @@ nicht realisiert.
 nicht realisiert.
 === Luftfeuchtigkeit ===
 nicht realisiert.
-
 \subsection{Fenstersteuerung}
 === Funktion ===
 === Hardware ===
