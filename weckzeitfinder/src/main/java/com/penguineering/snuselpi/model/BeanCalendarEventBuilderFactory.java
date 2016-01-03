@@ -142,7 +142,7 @@ class BeanCalendarEvent implements CalendarEvent {
 
 		SimpleDateFormat df = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ssZ" );
 		sb.append(df.format(start));
-		sb.append("_");
+		sb.append(" ");
 		sb.append(df.format(end));
 		sb.append(" [");
 		sb.append(sourceUUID);
