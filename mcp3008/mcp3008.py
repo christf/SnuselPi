@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -u
 # this will read the input of mcp3008. it will accept the analog input id as argument.
 # the program will output the change in value wrt the sliding average over the last 1000 samples
 
@@ -33,9 +33,10 @@ spi.open(0,0)
 
 input = int(sys.argv[1])
 schwellwert = int(sys.argv[2])
-sleep = 0.01
-ringlen = 1000
-
+interval = int(sys.argv[3])
+sleep = 0.001
+ringlen = 100
+hostname = sys.argv[4]
 def readadc(adcnum):
         if ((adcnum > 7) or (adcnum < 0)):
                 return -1
@@ -44,13 +45,44 @@ def readadc(adcnum):
 
         return adcout
 
-rb = RingBuffer(ringlen, readadc(input) )
+#rb = RingBuffer(ringlen, readadc(input) )
+rb = RingBuffer(ringlen, 0 )
 #rb = RingBuffer(
+minutavg = RingBuffer(1/sleep/ringlen*interval, 0)
+val=0
+count=0
+acount=0
+mcount=0
+f = open ('/tmp/mcp3008.log', 'w')
+f.write(str(input))
+f.write(str(schwellwert))
+f.write(str(interval))
+f.write(str(hostname))
+f.flush()
 while True:
-	offset = rb.avg()
+	lval = val
 	val = readadc(input)
-	rb.extend(val)
-	sys.stdout.write('\r' + str(abs(val - offset)))# + " " + str(offset) +   "       " )
-	sys.stdout.flush()
+	diff = abs(lval - val)
+	rb.extend(diff)
+	count+=1
+	if (count%ringlen == 0):
+		avg = rb.avg()
+	#	sys.stderr.write('\r' + str(avg) + "       " ) # + str(offset) +   "       " )
+	#	sys.stderr.flush()
+		minutavg.extend(avg)
+		mcount+=1
+		if (avg > schwellwert):
+			acount+=1
+		count=0
+		if (mcount%(1/sleep/ringlen*interval) == 0):
+			print "PUTVAL \"" + hostname + "/exec-accel/gauge-Accel" + str(input) + "_avg\" interval=" +  str(interval) + " N:" + str(int(minutavg.avg()*1000))  
+			f.write("PUTVAL \"" + hostname + "/exec-accel/gauge-Accel" + str(input) + "_avg\" interval=" +  str(interval) + " N:" + str(int(minutavg.avg()*1000))+ "\n")
+			f.flush()
+			print "PUTVAL \"" + hostname + "/exec-accel/gauge-Accelc" + str(input) + "_count\" interval=" +  str(interval) + " N:" + str(int(acount))
+			print "PUTVAL \"localhost/exec-Freifunk_Frankfurt/gauge-Connections_fastd1\" interval=60 N:102"
+			sys.stdout.flush()
+			mcount=0
+			acount=0
 	time.sleep(sleep)
 
+f.close
