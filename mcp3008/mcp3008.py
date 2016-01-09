@@ -34,7 +34,6 @@ spi.open(0,0)
 input = 0
 schwellwert = 1
 interval  = float(os.environ['COLLECTD_INTERVAL'])
-#interval = 10
 hostname = os.environ['COLLECTD_HOSTNAME']
 sleep = 0.001
 ringlen = 100
@@ -60,15 +59,16 @@ val=0
 count=0
 acount=0
 f = open ('/tmp/mcp3008.log', 'w')
-f.write("input " + str(input) + "\n")
+f.write("spi-device " + str(input) + "\n")
 f.write("schwellwert " + str(schwellwert) + "\n")
 f.write("interval " + str(interval)+ "\n")
 f.write("hostname: "+ str(hostname)+ "\n")
 f.flush()
 waititerations = (1/sleep)*interval
-# this is fucking crazy. si is a correction value fbecause python will not do a sleep_until to offset for processing time within the main loop. the  smaller sleep, the higher the offeset
-si=(1-0.51)*sleep
-# use 1-1.1 for sleep = 0.01 and 1-0.51 for sleep = 0.001
+# this is fucking crazy. si is a corrected sleep-value fbecause python will not do a sleep_until to offset for processing time within the main loop. the  smaller sleep, the higher the offeset
+# also polling spi with such a high resolution is questionable at best.
+si=(1-0.522)*sleep
+# use 1-1.1 for sleep = 0.01 and 1-0.52 for sleep = 0.001
 while True:
 	lval = val
 	val = readadc(input)
@@ -78,10 +78,10 @@ while True:
 	if (count % ringlen == 0) :
 		avg = rb.avg()
 		minutavg.extend(avg)
-		if (avg > schwellwert):
+		if (avg >= schwellwert):
 			acount+=1
 		if (count == waititerations):
-			output(f, "PUTVAL " + hostname + "/exec-accel/gauge-Accel" + str(input) + "_avg interval=" +  str(interval) + " N:" + str(int(minutavg.avg()*1000)) + "\n"  )
+			output(f, "PUTVAL " + hostname + "/exec-accel/gauge-Accel" + str(input) + "_avg interval=" +  str(interval) + " N:" + str(int(rb.avg())) + "\n"  )
 			output(f, "PUTVAL " + hostname + "/exec-accel/gauge-Accelc" + str(input) + "_count interval=" +  str(interval) + " N:" + str(int(acount)) + "\n")
 			sys.stdout.flush()
 			f.flush()
