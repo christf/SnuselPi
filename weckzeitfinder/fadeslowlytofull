@@ -1,0 +1,12 @@
+#!/bin/bash
+set -ix
+now=$(date +%s)
+future=$(date +%s -d "$1")
+
+sleepint=$((future - now))
+sleep $sleepint
+echo the future is now: $(date)
+for ((val=0;val<=20;val++))
+do
+/root/SnuselPi/weckzeitfinder/fader.py $(echo "($val/20)^2"|bc -l) 10
+done
