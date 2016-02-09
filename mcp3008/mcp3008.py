@@ -6,37 +6,15 @@ import os
 import spidev
 import time
 import sys
-import numpy as np
-
-class RingBuffer():
-    "A 1D ring buffer using numpy arrays"
-    def __init__(self, length, offset):
-        self.data = np.zeros(length, dtype='f')
-	self.data.fill(offset)
-        self.index = 0
-
-    def extend(self, x):
-        "adds array x to ring buffer"
-        self.data[self.index] = x
-        self.index = (self.index + 1) % self.data.size
-        #self.index = x_index 
-
-    def get(self):
-        "Returns the first-in-first-out data in the ring buffer"
-        idx = (self.index + np.arange(self.data.size)) %self.data.size
-        return self.data[idx]
-    def avg(self):
-	return np.average(self.data);
-
 
 spi = spidev.SpiDev()
 spi.open(0,0)
 input = 0
-schwellwert = 1
+schwellwert = 3
 interval  = float(os.environ['COLLECTD_INTERVAL'])
 hostname = os.environ['COLLECTD_HOSTNAME']
-sleep = 0.001
-ringlen = 100
+sleep = 0.002
+ringlen = 128
 def readadc(adcnum):
         if ((adcnum > 7) or (adcnum < 0)):
                 return -1
@@ -46,46 +24,54 @@ def readadc(adcnum):
         return adcout
 
 def output(f, value):
+	# t=str(0)
 	t = str(datetime.datetime.now())
 	f.write(t + " " + value)
 	sys.stdout.write(value)
 
-#rb = RingBuffer(ringlen, readadc(input) )
-rb = RingBuffer(ringlen, 0 )
-
-#rb = RingBuffer(
-minutavg = RingBuffer(1/sleep/ringlen*interval, 0)
 val=0
 count=0
 acount=0
+dcount=0
+debug=0
+if (len(sys.argv) >= 2):
+	debug=1
 f = open ('/tmp/mcp3008.log', 'w')
 f.write("spi-device " + str(input) + "\n")
 f.write("schwellwert " + str(schwellwert) + "\n")
 f.write("interval " + str(interval)+ "\n")
 f.write("hostname: "+ str(hostname)+ "\n")
 f.flush()
-waititerations = (1/sleep)*interval
-# this is fucking crazy. si is a corrected sleep-value fbecause python will not do a sleep_until to offset for processing time within the main loop. the  smaller sleep, the higher the offeset
+waititerations = int((1/sleep)*interval)
+# this is fucking crazy. si is a corrected sleep-value because python will not do a sleep_until to offset for processing time within the main loop. the  smaller sleep, the higher the offeset
 # also polling spi with such a high resolution is questionable at best.
-si=(1-0.522)*sleep
-# use 1-1.1 for sleep = 0.01 and 1-0.52 for sleep = 0.001
+
+si=(1-0.27)*sleep
+# use 1-1.1 for sleep = 0.01 and 1-0.52 for sleep = 0.001 since adxl335 is equiped such that the frequency is 500hz for z, 
+#MA*[i]= MA*[i-1] +X[i] - MA*[i-1]/N
+avg = 0
+dsum=0
+strint = str(interval)
+scount=0
+itercount=0
+strinp = str(input)
 while True:
 	lval = val
 	val = readadc(input)
-	diff = abs(lval - val)
-	rb.extend(diff)
-	count+=1
-	if (count % ringlen == 0) :
-		avg = rb.avg()
-		minutavg.extend(avg)
-		if (avg >= schwellwert):
-			acount+=1
-		if (count == waititerations):
-			output(f, "PUTVAL " + hostname + "/exec-accel/gauge-Accel" + str(input) + "_avg interval=" +  str(interval) + " N:" + str(int(rb.avg())) + "\n"  )
-			output(f, "PUTVAL " + hostname + "/exec-accel/gauge-Accelc" + str(input) + "_count interval=" +  str(interval) + " N:" + str(int(acount)) + "\n")
-			sys.stdout.flush()
-			f.flush()
-			acount=0
-			count=0
+	avg = int(avg + val - (int( avg) >>7))
+	sa=avg>>7
+	diff = val - sa
+	if (diff >= schwellwert) :
+		scount+=1
+	if (debug == 1 ):
+		sys.stdout.write("                                wert: " + str(val) + " average:" +  str(sa) + " wert-average:" + str(diff) + " wert-lwert" + str(lval - val) + " schwellwertcount"  + str(count) + "        \n");
+	if (itercount % waititerations == 0):
+		sys.stdout.write(str(datetime.datetime.now()) + " \n");
+		output(f, "PUTVAL " + hostname + "/exec-accel/gauge-Accel" + strinp + "_scount interval=" +  strint + " N:" + str(scount) + "\n"  )
+		scount=0
+		itercount=0
+		f.flush()
+	
+	itercount+=1
 	time.sleep(si)
 f.close

@@ -1,0 +1,4 @@
+#!/bin/bash
+./fadeslowlytofull $1
+sleep 900
+./fader.py 0 2

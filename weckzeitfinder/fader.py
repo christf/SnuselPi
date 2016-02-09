@@ -13,7 +13,7 @@ curval=0
 
 
 value=float(sys.argv[1])
-dur=float(sys.argv[2])
+fdur=float(sys.argv[2])
 
 def changer(pin, amount):
     f = open('/dev/pi-blaster', 'w')
@@ -23,36 +23,47 @@ def fade(color, curval, val):
     step=1
     if curval > val:
         step=-step
-
+    ubound=0.5
+    mbound=0.3
+#    ldur=fdur/val
+#    if (val-mbound > 0):
+#      mdur=fdur/(val-mbound)
+#      if (val-ubound >0):
+#        mdur=fdur/(ubound-mbound)
+#	udur=fdur/(curval-ubound)
+    ldur=fdur*mbound
+    mdur=fdur*(ubound-mbound)
+    udur=fdur*(1-ubound)
     while (curval <> val):
 	    multiplier = 3000
 	    secondbound = val
             firstbound=curval
-	    if (curval >= 0.5):
-		multiplier = 100
+	    if (curval >= ubound):
+		multiplier = 256
 		if (step < 0):
 			secondbound=max(val,0.499)
 		else:
 			secondbound=val
-	    elif (curval >= 0.3):
-		multiplier = 1000
+		fadeint(color, firstbound, secondbound, step, multiplier, udur)
+	    elif (curval >=mbound):
+		multiplier = 512
 		if (step < 0):
-			secondbound=max(val,0.299)
+			secondbound=max(val,mbound-0.0001)
 		else:
-			secondbound=min(val,0.5)
+			secondbound=min(val,ubound)
+		fadeint(color, firstbound, secondbound, step, multiplier, mdur)
 	    else:
-		multiplier=3000
+		multiplier=1024
 		if (step < 0):
 			secondbound=max(val,0)
 		else:
-			secondbound=min(val,0.3)
-	    
-	    fadeint(color, firstbound, secondbound, step, multiplier)
+			secondbound=min(val,mbound)
+		fadeint(color, firstbound, secondbound, step, multiplier, ldur)
 	    curval=secondbound
-	    print curval
+	    # print curval
 
 		
-def fadeint(color, curval, val, step, multiplier) :   
+def fadeint(color, curval, val, step, multiplier, dur) :   
     delay = dur/(float(abs(curval - value)/abs(step))*multiplier)
     for i in range (int(multiplier * curval),  int(multiplier * val), int(step)):
         f=(i/float(multiplier))
